@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="junit/extensions/jfcunit/src/|junit.extensions.jfcunit/src/" kind="src" path="lib"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="/home/myth/Downloads/jfcunit_Eclipse_plugin_2.08.zip"/>
+	<classpathentry kind="lib" path="/home/myth/Downloads/junit.extensions.jfcunit/jakarta-regexp-1.2.jar"/>
+	<classpathentry kind="lib" path="/home/myth/Downloads/junit.extensions.jfcunit/jfcunit.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

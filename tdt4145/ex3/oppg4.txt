@@ -1,0 +1,18 @@
+Oppgave 4
+----------------------
+
+a)
+
+Hensikten med views er å lage makroer for spørringer og/eller andre operasjoner på de fysiske tabellene i databasen. Dette gjerne for å gjøre det lettere å få tilgang til ofte brukte spørringer.
+Det er vanskelig å gi et entydig svar på om det går greit eller ikke å oppdatere et view. Her vil det være forskjellig fra view til view, avhengig av hvilke operasjoner viewet gjennomfører.
+Et view som for eksempel henter data fra flere tabeller kan kun oppdatere en av tabellene i viewet. Views som bruker funksjoner, spesifiserer distinct, eller group by kan ikke oppdateres. I tillegg
+er innsetting av data forbudt for views som har beregnet data i select-lista, og views som ikke inneholder alle kolonner definert som NOT NULL fra tabellene de ble definert i.
+
+b)
+
+prosjektnavn, avdeling, antall ansatte og totalt timer
+
+CREATE VIEW proj (pame, dname, num_empl, tot_hrs) AS SELECT PNAME, DNAME, COUNT(*), SUM(HOURS) FROM PROJECT, DEPARTMENT, WORKS_ON WHERE DNUM = DNUMBER AND PNUMBER = PNO GROUP BY PNAME;
+Var en feil i create statementen i oppgaveteksten. FK (DNO) er ikke definert som et felt i PROJECT, burde vært FK (DNUM)
+
+c) 1 og 2 er helt OK. 3 og 4 går ikke ettersom det er funksjonelle data som ikke gjenspeiler konkrete felt i noen kolonner i viewet (count, sum og avg).

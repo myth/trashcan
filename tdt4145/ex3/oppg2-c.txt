@@ -1,0 +1,19 @@
+Man kan bruke en assertion, men svært få versjoner av sql produkter (opensource) har denne funksjonaliteten i de gjeldende stable versjonene. Assertionen vil se noenlunde slik ut:
+
+create assertion kredsjekk
+check ( exists ( select k.kundenr, k.kredittgrense, sum(b.kvantum, a.pris) from kunde k, artikkel a, bestilling b where k.kundenr = b.kundenr and b.artnr = a.artnr group by k.kundenr having sum(b.kvantum * a.pris) < k.kredittgrense));
+
+I steden for kan man lage en trigger på before insert på bestilling tabellen:
+
+CREATE TRIGGER kredittgrense BEFORE INSERT ON 'BESTILLING'
+    FOR EACH ROW BEGIN
+        DECLARE total int DEFAULT 0;
+        DECLARE knr int;
+        DECLARE kgr int;
+        <insert noe avanasert select statement som inserter knr, kgr og sum(b.kvantum * a.pris)
+        if tot > kgr THEN
+            SET BESTILLING.KUNDENR = NULL;
+        END IF;
+    END;
+
+Siden kundenr er not null vil insert sjekken feile, og innsettingen vil ikke bli gjennomført.

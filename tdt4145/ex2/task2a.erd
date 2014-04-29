@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram height="600" made_with_version="1.5" name="Default" width="800">
+<entity id="0" is_weak="false" name="Person" x="39" y="36">
+<attributes>
+<attribute is_hidden="false" is_key="true" name="Personnummer" type=""/>
+<attribute is_hidden="false" is_key="false" name="Navn" type=""/>
+<attribute is_hidden="false" is_key="false" name="Adresse" type=""/>
+<attribute is_hidden="false" is_key="false" name="Fdato" type=""/>
+<attribute is_hidden="false" is_key="false" name="Kjønn" type=""/>
+<attribute is_hidden="false" is_key="false" name="Tlf" type=""/>
+<attribute is_hidden="false" is_key="false" name="Rådgiver" type=""/>
+</attributes>
+</entity>
+<entity id="1" is_weak="false" name="Utdanning" x="39" y="362">
+<attributes>
+<attribute is_hidden="false" is_key="true" name="Uid" type=""/>
+<attribute is_hidden="false" is_key="false" name="Skole" type=""/>
+<attribute is_hidden="false" is_key="false" name="Grad" type=""/>
+<attribute is_hidden="false" is_key="false" name="Kursnavn" type=""/>
+<attribute is_hidden="false" is_key="false" name="Antallår" type=""/>
+</attributes>
+</entity>
+<entity id="2" is_weak="false" name="Kunde" x="614" y="362">
+<attributes>
+<attribute is_hidden="false" is_key="true" name="Kundenr" type=""/>
+<attribute is_hidden="false" is_key="false" name="Navn" type=""/>
+<attribute is_hidden="false" is_key="false" name="Adresse" type=""/>
+</attributes>
+</entity>
+<entity id="3" is_weak="false" name="Oppdrag" x="595" y="51">
+<attributes>
+<attribute is_hidden="false" is_key="true" name="Løpenummer" type=""/>
+<attribute is_hidden="false" is_key="false" name="Stilling" type=""/>
+<attribute is_hidden="false" is_key="false" name="Fra" type=""/>
+<attribute is_hidden="false" is_key="false" name="Til" type=""/>
+<attribute is_hidden="false" is_key="false" name="Lønn" type=""/>
+<attribute is_hidden="false" is_key="false" name="Utførtav" type=""/>
+<attribute is_hidden="false" is_key="false" name="Kunde" type=""/>
+</attributes>
+</entity>
+<entity id="4" is_weak="false" name="Utdanning &lt;-&gt; Person" x="38" y="231">
+<attributes>
+<attribute is_hidden="false" is_key="true" name="Personnummer" type=""/>
+<attribute is_hidden="false" is_key="true" name="Utdanningskode" type=""/>
+<attribute is_hidden="false" is_key="false" name="Utdanningsår" type=""/>
+</attributes>
+</entity>
+<entity id="5" is_weak="false" name="Person &lt;-&gt; Kompetanse" x="295" y="230">
+<attributes>
+<attribute is_hidden="false" is_key="true" name="Personnummer" type=""/>
+<attribute is_hidden="false" is_key="true" name="Område" type=""/>
+<attribute is_hidden="false" is_key="true" name="Stilling" type=""/>
+<attribute is_hidden="false" is_key="false" name="Grad" type=""/>
+</attributes>
+</entity>
+<entity id="6" is_weak="false" name="Kompetanse" x="296" y="362">
+<attributes>
+<attribute is_hidden="false" is_key="true" name="Område" type=""/>
+<attribute is_hidden="false" is_key="true" name="Stilling" type=""/>
+</attributes>
+</entity>
+</diagram>

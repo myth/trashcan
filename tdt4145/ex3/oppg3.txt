@@ -1,0 +1,20 @@
+Bok(Bokid, Tittel, Utgittår, Forlagid)
+Forlag(Forlagid, Forlagnavn, Adresse, Telefon)
+Forfatter(Forfatterid, Fornavn, Etternavn, Fødeår, Dødår, Nasjonalitet)
+BokForfatter(Bokid, Forfatterid)
+
+3)
+---------------
+
+a) SELECT 'Tittel' FROM Bok;
+b) SELECT * FROM Forfatter WHERE Nasjonalitet = 'Norsk';
+c) SELECT Navn, Telefon FROM Forlag WHERE Adresse LIKE '%Oslo%' ORDER BY Navn;
+d) SELECT Tittel, Forlagnavn FROM Bok, Forlag WHERE Bok.Bokid = Forlag.Forlagid;
+e) SELECT Tittel, Utgittår FROM Bok, Bokforfatter, Forfatter WHERE Bok.Bokid=Bokforfatter.Bokid AND Bokforfatter.Forfatterid=Forfatter.Fordatterid AND Fornavn = 'Knut' AND Etternavn = 'Hamsun';
+f) SELECT fornavn, etternavn, fødselsår from Forfatter where Etternavn like 'H%';
+g) SELECT count(*) from Forlag;
+h) SELECT Tittel, Fornavn, Etternavn, Forlagnavn from Bok, Bokforfatter, Forfatter, Forlag WHERE Bok.Bokid=Bokforfatter.Bokid AND Bokforfatter.Forfatterid = Forfatter.Forfatterid AND Bok.Forlagid = Forlag.Forlagid AND Nasjonalitet = 'Britisk';
+i) SELECT Fornavn, Etternavn, count(*) FROM Bok, Forfatter, Bokforfatter WHERE Bok.bokid = Bokforfatter.Forfatterid AND Bokforfatter.Forfatterid = Forfatter.Forfatterid GROUP BY Fornavn, Etternavn, ORDER BY count(*) DESC;
+j) SELECT Tittel, MIN(Utgitt) FROM Bok;
+k) SELECT Forlagnavn, Count(*) FROM Forlag, Bok WHWRE Bok.Forlagid = Forlag.Forlagid GROUP BY Forlagnavn HAVING Count(*) > 2;
+l) SELECT Forlagnavn from Forlag WHERE Forlag.Forlagid NOT IN (SELECT Forlag.Forlagid FROM Forlag, Bok WHERE Forlag.Forlagid=Bok.Forlagid));

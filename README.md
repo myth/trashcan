@@ -1,4 +1,4 @@
 trashcan
 ========
 
-Hosting repo for exercises and other stuff at uni
+Hosting repo for assignments given at the university.

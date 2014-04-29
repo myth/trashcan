@@ -1,0 +1,9 @@
+Oppgave 5
+--------------------------------------
+
+a) select * from Supplier where status > 15;
+b) select sname, Supplier.city from Supplier, Part, SuppliesPart where Supplier.sno = SupplierPart.sno and SuppliesPart.pno = Part.pno and pname = 'Screw';
+c) select Part.pno, pname, count(*) from Part, Supplier, SuppliesPart where Part.pno = SuppliesPart.pno and SuppliesPart.sno = Supplier.Sno group by Part.pname having count(*) > 1 order by count(*);
+d) select count(*) from Supplier;
+e) select sname, Supplier.city from Supplier, Part, SuppliesPart where Supplier.sno = SuppliesPart.sno and SuppliesPart.pno = Part.pno and Part.weight > 10.0;
+f) select sname from Supplier where sname not in (select sname from Supplier, Part, SuppliesPart where Supplier.sno = SuppliesPart.sno and SuppliesPart.pno = Part.sno and pname = 'Screw'); 

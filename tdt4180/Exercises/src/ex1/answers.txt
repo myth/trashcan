@@ -1,0 +1,21 @@
+In my implementation i used both lexical and syntactical event listeners. For the togglebuttons,
+the amount of checks and validation needed to properly parse the action performed is too much for such a simple function.
+Thus i used the syntactical ActionListener, that is a wrapper for all the different kinds of mouse actions, returning an action only if
+certain criteria are met at the end state of the consequtive lexical events.
+
+With regards to the continuous checkbox, i handled this lexically, as i wanted to perform an action on every single keypress.
+More specifically, i handled the keyRelease event, as this particular lexical event is triggered after the keyvalue input has been processed,
+also allowing the last input character to be manipulated by the to*Case-methods.
+
+The pro's of using syntactical events are many, if you consider the amount of work and checks needed to be done on mouse movements just to
+implement a simple click listener. Syntactical events are high-level, and is a result of a series of lexical events meeting some end-state.
+If one needs to perform an action only on isolated events, no matter what combinations might occur, only handling the lexical event is a good way to go.
+
+When it comes to the text cursor (caret) retaining its position, i first tried to handle it syntactically with an actionlistener, but it does not
+trigger on regular mouse clicks. I then had to implement a custom Mouse Listener to handle the lexical MouseClicked event (press + release) on 
+the text input field, using it to trigger an update of the current caret position.
+
+I could probably handle it syntactically, but it would be tedious and in practice be almost the same. If i want to perform an operation on every
+new keypress, the syntactical custom KeyAction wrapper would only incorporate three lexical events, and in reality only use one of them.
+The standard ActionListener would require me to press the Enter key, as it will trigger as an action.
+
