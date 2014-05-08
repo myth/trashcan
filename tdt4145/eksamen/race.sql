@@ -23,7 +23,7 @@ create table result(rid int not null,
                     foreign key (rid) references race (rid) on update cascade on delete cascade,
                     foreign key (sid) references athlete (sid) on update cascade on delete cascade);
 
-insert into athlete values (null, 'Arne', 1, '1987-03-85', 'Norwway'),
+insert into athlete values (null, 'Arne', 1, '1987-03-05', 'Norwway'),
                            (null, 'Jens', 1, '1988-02-05', 'Sweden'),
                            (null, 'Gottlieb', 2, '1990-01-15', 'Germany'),
                            (null, 'Olaf', 2, '1978-05-19', 'Norway'),
