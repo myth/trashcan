@@ -3,6 +3,7 @@
 import os
 
 from Tkinter import *
+from tkFont import Font
 from ScrolledText import ScrolledText
 
 class Main(Frame):
@@ -37,7 +38,7 @@ class Main(Frame):
         self.txt.pack(side=LEFT, fill=Y)
         self.scrollbar.config(command=self.txt.yview)
         self.txt.config(yscrollcommand=self.scrollbar.set)
-        self.txt.config(font=('Consolas', 10))
+        self.txt['font'] = ('Liberation Mono', 12, 'normal')
 
         self.pack(fill=BOTH, expand=1)
 
@@ -57,7 +58,7 @@ class Main(Frame):
         for f in files:
             full_path = os.path.join(os.getcwd(), 'boards', f)
             print full_path
-            file_menu.add_command(label=os.path.basename(f), command=lambda: self.settext(file=full_path))
+            file_menu.add_command(label=os.path.basename(f), command=lambda full_path=full_path: self.settext(file=full_path))
 
     def onExit(self):
         self.quit()
