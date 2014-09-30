@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from algorithms import *
+from datastructures import *
+import os
 
 from Tkinter import *
 
@@ -26,5 +29,10 @@ if __name__ == '__main__':
     center_window(root)
     app = Main(root)
     app.appendtext('Skeet mcskeet\n')
+
+    with open(os.path.join(os.getcwd(), 'boards', 'board-1-1.txt'), 'r') as text:
+        board = Board(text.read())
+
+    app.appendtext(aStar(board.matrix, board.get_start(), board.get_goal()))
 
     root.mainloop()

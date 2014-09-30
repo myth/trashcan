@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 
-def aStar(self, graph, current, end):
+
+
+def aStar(graph, current, end):
     openList = []
     closedList = []
     path = []
 
-    def retracePath(c):
+    def retracepath(c):
         path.insert(0,c)
-        if c.parent == None:
+        if c.parent is None:
             return
-        retracePath(c.parent)
+        retracepath(c.parent)
 
     openList.append(current)
     while len(openList) is not 0:
-        current = min(openList, key=lambda inst:inst.H)
+        current = min(openList, key=lambda inst: inst.h)
         if current == end:
-            return retracePath(current)
+            return retracepath(current)
         openList.remove(current)
         closedList.append(current)
         for tile in graph[current]:
             if tile not in closedList:
-                tile.H = (abs(end.x-tile.x)+abs(end.y-tile.y))*10
+                tile.h = (abs(end.x-tile.x)+abs(end.y-tile.y))*10
                 if tile not in openList:
                     openList.append(tile)
                 tile.parent = current
@@ -48,3 +50,4 @@ def dfs(graph, start, visited=None):
     return visited
 
 #dfs(graph, 'C') # {'E', 'D', 'F', 'A', 'C', 'B'}
+
