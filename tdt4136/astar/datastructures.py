@@ -13,11 +13,29 @@ class Board:
 
 
 
-    def get_startpoint(self):
+    def get_start(self):
         """
-        This function returns det x and y coordinates for the starting position A.
+        Returns coordinates for the starting node
+        """
+        return self.get_point('A')
+
+
+
+    def get_goal(self):
+        """
+        Returns coordinates for det goal node
+        """
+
+        return self.get_goal('B')
+
+
+
+    def get_point(self, node):
+        """
+        This function returns det x and y coordinates for a given node
         """
         for x in self.matrix:
             for y in self.matrix[x]:
-                if y == 'A':
+                if y == node:
                     return (x,y)
+                
