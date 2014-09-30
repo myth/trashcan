@@ -17,11 +17,11 @@ class Main(Frame):
         menubar = Menu(self.parent)
 
         self.parent.config(menu=menubar)
-        self.parent.title('A-Star')
+        self.parent.title(u'A-Star')
 
         file_menu = Menu(menubar)
-        file_menu.add_command(label='Exit', command=self.onExit)
-        menubar.add_cascade(label='File', menu=file_menu)
+        file_menu.add_command(label=u'Exit', command=self.onExit)
+        menubar.add_cascade(label=u'File', menu=file_menu)
 
         self.pack(fill=BOTH, expand=1)
 
