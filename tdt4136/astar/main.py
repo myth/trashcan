@@ -33,6 +33,6 @@ if __name__ == '__main__':
     with open(os.path.join(os.getcwd(), 'boards', 'board-1-1.txt'), 'r') as text:
         board = Board(text.read())
 
-    app.appendtext(aStar(board.matrix, board.get_start(), board.get_goal()))
+    #app.appendtext(aStar(board.matrix, board.get_start(), board.get_goal()))
 
     root.mainloop()
