@@ -6,6 +6,8 @@ from Tkinter import *
 from tkFont import Font
 from ScrolledText import ScrolledText
 
+from algorithms import *
+
 class Main(Frame):
     
     def __init__(self, parent):
