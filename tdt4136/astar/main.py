@@ -1,32 +1,32 @@
 # -*- coding: utf-8 -*-
+"""
+This is the main program file for the A* application
 
-import sys
-import os
-import logging
-import time
-import datetime
+Authors: Fredrik B. Tørnvall & Aleksander Skraastad
+"""
 
 from Tkinter import *
 
 from algorithms import *
-from datastructures import *
 from view import Main
 
-def center_window(root):
+
+def center_window(r):
     """
-    Takes in a root widget, and positions the window to center of screen
+    Takes in a r widget, and positions the window to center of screen
+    :param r: Takes the root window widget as an argument
     """
 
     width = 1280
     height = 600
 
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
+    screen_width = r.winfo_screenwidth()
+    screen_height = r.winfo_screenheight()
 
     x = (screen_width - width) / 2
     y = (screen_height - height) / 2
 
-    root.geometry('%dx%d+%d+%d' % (width, height, x, y))
+    r.geometry('%dx%d+%d+%d' % (width, height, x, y))
 
 
 if __name__ == '__main__':
@@ -41,6 +41,6 @@ if __name__ == '__main__':
     center_window(root)
     app = Main(root)
 
-    #app.appendtext(aStar(board.matrix, board.get_start(), board.get_goal()))
+    #app.appendtext(a_star(board.matrix, board.get_start(), board.get_goal()))
 
     root.mainloop()

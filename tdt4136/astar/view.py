@@ -10,10 +10,12 @@ from tkFont import Font
 from algorithms import *
 from datastructures import *
 
+
 class Main(Frame):
     """
     Main window frame for the GUI
     """
+
     def __init__(self, parent):
         """
         Initialize the frame, set parent container and initialize the board field
@@ -23,10 +25,10 @@ class Main(Frame):
 
         self.parent = parent
         self.board = None
+        self.canvas = None
+        self.init_ui()
 
-        self.initUI()
-
-    def initUI(self):
+    def init_ui(self):
         """
         Helper method to set up widgets, customize them and add menu structure
         """
@@ -49,15 +51,16 @@ class Main(Frame):
 
         self.pack(fill=BOTH, expand=1)
 
-    def createmap(self, file=None):
+    def createmap(self, f=None):
         """
         Creates a canvas map of colored squares based on the board created
         by the file parameter and the color field of the Node instances.
+        :param f: Takes a full path to a board file
         """
 
-        logging.debug('Creating map from %s' % os.path.basename(file))
+        logging.debug('Creating map from %s' % os.path.basename(f))
 
-        with open(file, 'r') as board:
+        with open(f) as board:
             self.board = Board(board.read())
 
         self.canvas.delete('all')
@@ -65,25 +68,26 @@ class Main(Frame):
         for y in xrange(len(self.board.matrix)):
             for x in xrange(len(self.board.matrix[y])):
                 coords = (
-                    x*30 + 2,
-                    y*30 + 2,
-                    x*30 + 32,
-                    y*30 + 32,
+                    x * 30 + 2,
+                    y * 30 + 2,
+                    x * 30 + 32,
+                    y * 30 + 32,
                 )
 
                 self.canvas.create_rectangle(*coords,
-                    fill=self.board.matrix[y][x].color)
+                                             fill=self.board.matrix[y][x].color)
 
-    def add_boards_to_menu(self, filemenu):
+    def add_boards_to_menu(self, menu):
         """
         Dynamically create the boards submenu
+        :param menu: Takes in an instance of a top level menu element
         """
         files = [f for f in os.listdir('./boards/') if '.txt' in os.path.basename(f)]
         files = sorted(files)
         for f in files:
             fullpath = os.path.join(os.getcwd(), 'boards', f)
-            filemenu.add_command(label=os.path.basename(f),
-                command=lambda fullpath=fullpath: self.createmap(file=fullpath))
+            menu.add_command(label=os.path.basename(f),
+                             command=lambda fp=fullpath: self.createmap(file=fp))
 
     def on_exit(self):
         """

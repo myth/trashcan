@@ -1,18 +1,28 @@
 # -*- coding: utf-8 -*-
+"""
+This module contains the classes for Board and Node objects
+"""
 
-class Board:
+
+class Board(object):
+    """
+    A board is a representation of a text file, and contains a matrix of Node objects
+    :param board:
+    """
+
     def __init__(self, board):
         """
         Initialize the board by creating the matrix
         """
         self.matrix = self.make_matrix(board)
 
-
-    def make_matrix(self, board):
+    @staticmethod
+    def make_matrix(board):
         """
         This function returns a matrix of Nodes based on an input string
+        :param board:
         """
-        
+
         # Create the initial character matrix
         matrix = [list(line) for line in board.split('\n')]
 
@@ -23,14 +33,11 @@ class Board:
 
         return matrix
 
-
     def get_start(self):
         """
         Returns coordinates for the starting node
         """
         return self.get_point('A')
-
-
 
     def get_goal(self):
         """
@@ -39,11 +46,10 @@ class Board:
 
         return self.get_point('B')
 
-
-
     def get_point(self, node):
         """
-        This function returns det x and y coordinates for a given node
+        This function returns the x and y coordinates for a given node
+        :param node: An instance of Node
         """
         for x in xrange(len(self.matrix)):
             for y in xrange(len(self.matrix[x])):
@@ -51,9 +57,16 @@ class Board:
                     return x, y
 
 
+class Node(object):
+    """
+    A Node is a representation of a tile on the game grid
+    :param h: Distance from this node to goal node
+    :param parents: A list of parents to this node used for traversal
+    :param x: The X-coordinate of this node
+    :param y: The Y-coordinate of this node
+    :param c: The character used in the text file to represent this node
+    """
 
-
-class Node:
     def __init__(self, h=0, parents=None, x=None, y=None, c=None):
         """
         Initialize a Node with the given values, set some inferrable values
@@ -134,17 +147,16 @@ class Node:
 
         return self.f > other.f
 
-
     def manhattan(self, board):
         """
         :param board: is an instance of a board
         :return: Returning the h value for a given node
         """
 
-        xDest, yDest = board.get_goal()
+        x_dest, y_dest = board.get_goal()
 
-        xd = xDest - self.x
-        yd = yDest - self.y
+        xd = x_dest - self.x
+        yd = y_dest - self.y
 
         return abs(xd) + abs(yd)
 
