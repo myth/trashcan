@@ -24,9 +24,11 @@ class Main(Frame):
 
         file_menu = Menu(menubar)
         file_menu.add_command(label=u'Exit', command=self.onExit)
+        boards_menu = Menu(menubar)
         menubar.add_cascade(label=u'File', menu=file_menu)
+        menubar.add_cascade(label=u'Boards', menu=boards_menu)
 
-        self.add_boards(file_menu)
+        self.add_boards(boards_menu)
 
         self.txt = Text(self)
         self.scrollbar = Scrollbar(self)
@@ -43,15 +45,19 @@ class Main(Frame):
         if file:
             with open(file, 'r') as fil:
                 text = fil.read()
+                fil.close()
         self.txt.delete('1.0', END)
         self.txt.insert('1.0', text)
         self.txt.mark_set(INSERT, '1.0')
         self.txt.focus()
 
     def add_boards(self, file_menu):
-        files = [f for f in os.listdir('./boards/') if os.path.isfile(f)]
+        files = [f for f in os.listdir('./boards/') if '.txt' in os.path.basename(f)]
+        files = sorted(files)
         for f in files:
-            file_menu.add_command(label=os.path.basename(f), command=self.settext(file=f))
+            full_path = os.path.join(os.getcwd(), 'boards', f)
+            print full_path
+            file_menu.add_command(label=os.path.basename(f), command=lambda: self.settext(file=full_path))
 
     def onExit(self):
         self.quit()
