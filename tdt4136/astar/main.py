@@ -6,23 +6,6 @@ from Tkinter import Tk
 
 from view import Main
 
-def parse_args(root):
-
-    tasks = ['1']
-
-    try:
-        task = sys.argv[1]
-    except IndexError:
-        print u'Insufficient arguments'
-        exit(1)
-    if task not in tasks:
-        print u'Invalid task. Choose from: %s' % u','.join(tasks)
-        exit(1)
-    else:
-        if task == '1':
-            return Main(root)
-
-
 def center_window(root):
 
     width = 800
@@ -41,5 +24,5 @@ if __name__ == '__main__':
     
     root = Tk()
     center_window(root)
-    app = parse_args(root)
+    app = Main(root)
     root.mainloop()
