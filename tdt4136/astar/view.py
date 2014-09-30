@@ -2,6 +2,7 @@
 
 import os
 from random import randint
+import logging
 
 from Tkinter import *
 from tkFont import Font
@@ -53,6 +54,8 @@ class Main(Frame):
         Creates a canvas map of colored squares based on the board created
         by the file parameter and the color field of the Node instances.
         """
+
+        logging.debug('Creating map from %s' % os.path.basename(file))
 
         with open(file, 'r') as board:
             self.board = Board(board.read())

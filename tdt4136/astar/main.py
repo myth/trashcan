@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from algorithms import *
-from datastructures import *
 import os
+import logging
+import time
+import datetime
 
 from Tkinter import *
 
+from algorithms import *
+from datastructures import *
 from view import Main
 
 def center_window(root):
@@ -30,6 +33,9 @@ if __name__ == '__main__':
     """
     Main run method
     """
+
+    logging.basicConfig(filename='debug.log', level=logging.DEBUG)
+    logging.debug('Starting program at %s' % datetime.datetime.utcnow().strftime('%H:%M:%S'))
     
     root = Tk()
     center_window(root)
