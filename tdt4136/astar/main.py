@@ -2,7 +2,7 @@
 
 import sys
 
-from Tkinter import Tk
+from Tkinter import *
 
 from view import Main
 
@@ -25,4 +25,5 @@ if __name__ == '__main__':
     root = Tk()
     center_window(root)
     app = Main(root)
+
     root.mainloop()
