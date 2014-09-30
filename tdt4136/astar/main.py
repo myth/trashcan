@@ -14,7 +14,7 @@ def center_window(root):
     Takes in a root widget, and positions the window to center of screen
     """
 
-    width = 800
+    width = 1280
     height = 600
 
     screen_width = root.winfo_screenwidth()
