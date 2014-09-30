@@ -37,7 +37,7 @@ class Main(Frame):
         self.scrollbar = Scrollbar(self)
         
         self.scrollbar.pack(side=RIGHT, fill=Y)
-        self.txt.pack(side=LEFT, fill=Y)
+        self.txt.pack(side=TOP, fill=BOTH, expand=1)
         self.scrollbar.config(command=self.txt.yview)
         self.txt.config(yscrollcommand=self.scrollbar.set)
         self.txt['font'] = ('Liberation Mono', 12, 'normal')
