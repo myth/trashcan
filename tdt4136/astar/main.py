@@ -25,5 +25,6 @@ if __name__ == '__main__':
     root = Tk()
     center_window(root)
     app = Main(root)
+    app.appendtext('Skeet mcskeet\n')
 
     root.mainloop()

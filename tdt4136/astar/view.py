@@ -54,6 +54,15 @@ class Main(Frame):
         self.txt.mark_set(INSERT, '1.0')
         self.txt.focus()
 
+    def appendtext(self, text='', file=None):
+        if file:
+            with open(file, 'r') as fil:
+                text = fil.read()
+                fil.close()
+        self.txt.insert(END, text)
+        self.txt.mark_set(INSERT, END)
+        self.txt.focus()
+
     def add_boards(self, file_menu):
         files = [f for f in os.listdir('./boards/') if '.txt' in os.path.basename(f)]
         files = sorted(files)
