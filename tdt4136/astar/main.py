@@ -10,6 +10,9 @@ from Tkinter import *
 from view import Main
 
 def center_window(root):
+    """
+    Takes in a root widget, and positions the window to center of screen
+    """
 
     width = 800
     height = 600
@@ -24,14 +27,13 @@ def center_window(root):
 
 
 if __name__ == '__main__':
+    """
+    Main run method
+    """
     
     root = Tk()
     center_window(root)
     app = Main(root)
-    app.appendtext('Skeet mcskeet\n')
-
-    with open(os.path.join(os.getcwd(), 'boards', 'board-1-1.txt'), 'r') as text:
-        board = Board(text.read())
 
     #app.appendtext(aStar(board.matrix, board.get_start(), board.get_goal()))
 

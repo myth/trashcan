@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-
-
 def aStar(graph, current, end):
+    """
+    the A* algorithm. Takes in a graph, current position and destination
+    """
     openList = []
     closedList = []
     path = []
@@ -30,6 +31,14 @@ def aStar(graph, current, end):
 
 
 def dfs(graph, start):
+    """
+    Depth-First-Search.
+
+    :param graph: A graph/matrix of nodes
+    :param start: The starting position
+    :return: Reurns a set of nodes in the order they were visited
+    """
+
     visited, stack = set(), [start]
     while stack:
         vertex = stack.pop()
@@ -38,16 +47,20 @@ def dfs(graph, start):
             stack.extend(graph[vertex] - visited)
     return visited
 
-#dfs(graph, 'A') # {'E', 'D', 'F', 'A', 'C', 'B'}
-
 
 def dfs(graph, start, visited=None):
+    """
+    Breadth-First-Search
+
+    :param graph: A graph/matrix of nodes
+    :param start: The starting position
+    :param visited: Recursive pass-through variable that tracks visited nodes
+    :return: Resutns a set of nodes in the order they were visited
+    """
+
     if visited is None:
         visited = set()
     visited.add(start)
     for next in graph[start] - visited:
         dfs(graph, next, visited)
     return visited
-
-#dfs(graph, 'C') # {'E', 'D', 'F', 'A', 'C', 'B'}
-
