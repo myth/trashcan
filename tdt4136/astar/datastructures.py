@@ -196,5 +196,5 @@ class Node(object):
         return abs(xd) + abs(yd)
 
     def __unicode__(self):
-        return 'Node %d,%d (%s)' % (self.x, self.y, self.c)
+        return str('Node %d,%d (%s)' % (self.x, self.y, self.c))
 
