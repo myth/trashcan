@@ -25,25 +25,31 @@ class Main(Frame):
         self.parent = parent
         self.board = None
         self.canvas = None
+        self.view_level = 0
         self.init_ui()
 
     def init_ui(self):
         """
         Helper method to set up widgets, customize them and add menu structure
         """
+        
         menubar = Menu(self.parent)
 
         self.parent.config(menu=menubar)
         self.parent.title(u'A-Star')
 
-        filemenu = Menu(menubar)
-        filemenu.add_command(label=u'Exit', command=self.on_exit)
-        boardsmenu = Menu(menubar)
-        menubar.add_cascade(label=u'File', menu=filemenu)
+        boardsmenu = Menu(menubar, tearoff=0)
+        algorithmmenu = Menu(menubar, tearoff=0)
+        optionsmenu = Menu(menubar, tearoff=0)
+
         menubar.add_cascade(label=u'Boards', menu=boardsmenu)
-        algorithmmenu = Menu(menubar)
         menubar.add_cascade(label=u'Algorithms', menu=algorithmmenu)
+        menubar.add_cascade(label=u'Options', menu=optionsmenu)
+       
         algorithmmenu.add_command(label=u'Astar', command=self.perform_astar)
+
+        optionsmenu.add_command(label=u'Show trail only', state=DISABLED, command=self.only_show_trail)
+        optionsmenu.add_command(label=u'Show all states', command=self.show_all_states)
 
         self.add_boards_to_menu(boardsmenu)
 
@@ -52,6 +58,8 @@ class Main(Frame):
         self.canvas.pack(fill=BOTH, expand=1)
 
         self.pack(fill=BOTH, expand=1)
+
+        self.optionsmenu = optionsmenu
 
     def createmap(self, f=None):
         """
@@ -93,12 +101,6 @@ class Main(Frame):
             menu.add_command(label=os.path.basename(f),
                              command=lambda fp=fullpath: self.createmap(f=fp))
 
-    def on_exit(self):
-        """
-        Close the application
-        """
-        self.quit()
-
     def draw_markers(self, nodes, icon):
         """
         This helper method draws dots on the nodes visited by a particular algorithm,
@@ -124,15 +126,32 @@ class Main(Frame):
     def perform_astar(self):
         """
         This command is triggered from the application Algorithm menu, and initiates the a_star algorithm.
-        It then calls the draw_trail helper method.
+        It then calls the draw_markers helper method to draw trail, openset and closedset depending on view_level.
         """
         logging.debug('Start %s' % self.board.get_start())
         logging.debug('Dest %s' % self.board.get_goal())
 
         trail, openlist, closedlist = a_star(self.board.graph, self.board.get_start(), self.board.get_goal())
         self.draw_markers(trail, 'path')
-        self.draw_markers(openlist, 'open')
-        for node in trail:
-            if node in closedlist:
-                closedlist.remove(node)
-        self.draw_markers(closedlist, 'closed')
+        if self.view_level > 0:
+            self.draw_markers(openlist, 'open')
+            for node in trail:
+                if node in closedlist:
+                    closedlist.remove(node)
+            self.draw_markers(closedlist, 'closed')
+
+    def only_show_trail(self):
+        """
+        Set the view level to only show the path taken
+        """
+        self.optionsmenu.entryconfig(0, state=DISABLED)
+        self.optionsmenu.entryconfig(1, state=NORMAL)
+        self.view_level = 0
+
+    def show_all_states(self):
+        """
+        Set the view level to show both path taken, openset and closedset
+        """
+        self.optionsmenu.entryconfig(0, state=NORMAL)
+        self.optionsmenu.entryconfig(1, state=DISABLED)
+        self.view_level = 1

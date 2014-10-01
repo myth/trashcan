@@ -10,7 +10,11 @@ from heapq import *
 
 def a_star(neighbors, current, end):
     """
-    the A* algorithm. Takes in a graph, current position and destination
+    The A* algorithm. Takes in a graph, current position and destination
+
+    Our implementation was written by ourselves for the most part, with
+    inspiration gathered from Wikipedias Excellent A* article
+
     :param graph: The matrix of nodes
     :param end: The instance of the goal node
     :param current: The node representing the starting point
@@ -38,7 +42,6 @@ def a_star(neighbors, current, end):
     openset = []
     heapify(openset)
     closedset = set()
-    g_score = {}
 
     # Add the starting node to the heap
     heappush(openset, current)
@@ -48,12 +51,6 @@ def a_star(neighbors, current, end):
 
         # Get the first element from the queue (The one with the lowest G-value)
         current = heappop(openset)
-
-        logging.debug('Current node is %s' % current)
-        logging.debug(repr(openset))
-        logging.debug('H is %f' % current.h)
-        logging.debug('G is %f' % current.g)
-        logging.debug('--------------------------------------------------------')
 
         # If we have reached the end node, perform the traceback,
         # reverse the list and break out
@@ -74,14 +71,16 @@ def a_star(neighbors, current, end):
             # What will the cost be with turrent path
             temp_cost = current.g + neighbor.arc_cost
 
-            # If the node has not been added to the openset
+            # Set G value, update F value, set parent and
+            # add to openset if not already in openset
             if neighbor not in openset:
                 neighbor.set_g(temp_cost)
                 neighbor.update_f()
                 neighbor.parent = current
                 heappush(openset, neighbor)
 
-            # If the node is in the openset, but this path is better
+            # If the node is in the openset, but this path is better, then
+            # update parent, G value and recalculate F value
             elif temp_cost < neighbor.g:
                 neighbor.parent = current
                 neighbor.set_g(temp_cost)
@@ -92,7 +91,7 @@ def a_star(neighbors, current, end):
 
     logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
 
-    # Algo failed
+    # Algo failed, returning path and sets for drawing mainly for debug purposes
     return retracepath(current), openset, closedset
 
 
