@@ -57,8 +57,6 @@ class Board(object):
                     if not (left <= x + i < right): continue
                     if not (top <= y + j < bottom): continue
 
-                    logging.debug('Checking adjacency: %d,%d' % (x + i, y + j))
-
                     graph[matrix[y][x]].append(matrix[y+j][x+i])
 
         return graph
