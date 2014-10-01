@@ -36,15 +36,15 @@ def a_star(graph, current, end):
 
     openlist.append(current)
     while len(openlist) is not 0:
-        current = min(openlist, key=lambda inst: inst.h)
-        if current == end:
+        current = min(openlist, key=lambda inst: inst.h)  #Her må vi regne ut h verdien
+        if current == end:  #Board.get_goal()
             logging.debug('A* took %d seconds to run.' % time.time() - start_time)
             return retracepath(current)
         openlist.remove(current)
         closedlist.append(current)
         for tile in graph[current]:
             if tile not in closedlist:
-                tile.h = (abs(end.x - tile.x)+abs(end.y - tile.y))*10
+                tile.h = (abs(end.x - tile.x)+abs(end.y - tile.y))*10  #?
                 if tile not in openlist:
                     openlist.append(tile)
                 tile.parent = current

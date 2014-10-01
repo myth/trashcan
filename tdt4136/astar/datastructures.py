@@ -100,7 +100,7 @@ class Node(object):
             self.color = 'black'
 
         # Add some colors to other states aswell
-        elif self.c == '.':
+        elif self.c == '.':  #mangler g verdi for denne, skal være 1
             self.color = 'green'
         elif self.c == 'A':
             self.color = 'pink'

@@ -87,7 +87,7 @@ class Main(Frame):
         for f in files:
             fullpath = os.path.join(os.getcwd(), 'boards', f)
             menu.add_command(label=os.path.basename(f),
-                             command=lambda fp=fullpath: self.createmap(file=fp))
+                             command=lambda fp=fullpath: self.createmap(f=fp))
 
     def on_exit(self):
         """
