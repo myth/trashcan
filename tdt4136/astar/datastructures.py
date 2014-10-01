@@ -126,6 +126,12 @@ class Node(object):
                 self.g = 1
                 self.color = 'brown'
 
+    def update(self):
+        """
+        Update the F-value based on the G and H values
+        """
+        self.f = self.g + self.h
+
     def __eq__(self, other):
         """
         Comparable function
