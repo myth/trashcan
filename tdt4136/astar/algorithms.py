@@ -30,7 +30,8 @@ def a_star(graph, current, end):
         :param c:
         :return:
         """
-        logging.debug('Retrace on %d, %d with parent %s' % (c.x, c.y, c.parent))
+        if c.parent is not None:
+            logging.debug('Retrace on %d, %d with parent %s' % (c.x, c.y, str(c.parent)))
         path.insert(0, c)
         if c.parent is None:
             logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
@@ -41,7 +42,7 @@ def a_star(graph, current, end):
     while openlist:
         current = heappop(openlist)
 
-        if current == end:
+        if current is end:
             logging.debug('Reached destination')
             logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
             return retracepath(current)
