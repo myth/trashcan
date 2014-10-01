@@ -50,6 +50,8 @@ def a_star(graph, current, end):
 
         closedlist.add(current)
         for tile in graph[current]:
+            if not tile.walkable:
+                closedlist.add(tile)
             if tile not in closedlist:
                 tile.update(tile.manhattan(end), current.g + tile.g)
                 if tile not in openlist:
