@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import os
-from random import randint
 import logging
+import time
 
 from Tkinter import *
-from tkFont import Font
 
 from algorithms import *
 from datastructures import *
@@ -101,4 +100,15 @@ class Main(Frame):
     def test_astar(self):
         logging.debug('Start %s' % self.board.get_start())
         logging.debug('Dest %s' % self.board.get_goal())
-        logging.debug(repr(a_star(self.board.graph, self.board.get_start(), self.board.get_goal())))
+        trail = a_star(self.board.graph, self.board.get_start(), self.board.get_goal())
+
+        logging.debug('Retrace path:\n %s' % repr(trail))
+
+        for node in trail:
+            coords = (
+                node.x * 30 + 2,
+                node.y * 30 + 2,
+                node.x * 30 + 32,
+                node.y * 30 + 32,
+            )
+            self.canvas.create_oval(*coords, fill='red', width=0)

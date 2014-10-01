@@ -5,6 +5,7 @@ This module contains the classes for Board and Node objects
 from itertools import product
 import logging
 
+
 class Board(object):
     """
     A board is a representation of a text file, and contains a matrix of Node objects
@@ -35,7 +36,8 @@ class Board(object):
 
         return matrix
 
-    def make_graph(self, matrix):
+    @staticmethod
+    def make_graph(matrix):
         """
         Create a dictionary of the nodes in the board matrix
         :param matrix: A two dimensional list of Node objects
@@ -54,8 +56,10 @@ class Board(object):
             for x in xrange(left, right):
                 graph[matrix[y][x]] = []
                 for i, j in product([-1, 0, 1], [-1, 0, 1]):
-                    if not (left <= x + i < right): continue
-                    if not (top <= y + j < bottom): continue
+                    if not (left <= x + i < right):
+                        continue
+                    if not (top <= y + j < bottom):
+                        continue
 
                     graph[matrix[y][x]].append(matrix[y+j][x+i])
 
@@ -90,13 +94,13 @@ class Node(object):
     """
     A Node is a representation of a tile on the game grid
     :param h: Distance from this node to goal node
-    :param parents: A list of parents to this node used for traversal
+    :param parent: A list of parents to this node used for traversal
     :param x: The X-coordinate of this node
     :param y: The Y-coordinate of this node
     :param c: The character used in the text file to represent this node
     """
 
-    def __init__(self, h=0, parents=None, x=None, y=None, c=None):
+    def __init__(self, h=0, parent=None, x=None, y=None, c=None):
         """
         Initialize a Node with the given values, set some inferrable values
         at start.
@@ -111,8 +115,8 @@ class Node(object):
         # F-value is G+H
         self.f = self.g + self.h
 
-        # All the neighboring nodes to the current node
-        self.parents = parents
+        # The previous node visited before this one
+        self.parent = parent
 
         # x coordinate
         self.x = x
@@ -197,5 +201,10 @@ class Node(object):
         return abs(xd) + abs(yd)
 
     def __unicode__(self):
-        return str('Node %d,%d (%s)' % (self.x, self.y, self.c))
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.c)
 
+    def __repr__(self):
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.c)
+
+    def __str__(self):
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.c)

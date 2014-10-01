@@ -42,6 +42,4 @@ if __name__ == '__main__':
     center_window(root)
     app = Main(root)
 
-
-
     root.mainloop()
