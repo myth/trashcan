@@ -42,6 +42,6 @@ if __name__ == '__main__':
     center_window(root)
     app = Main(root)
 
-    #app.appendtext(a_star(board.matrix, board.get_start(), board.get_goal()))
+    
 
     root.mainloop()

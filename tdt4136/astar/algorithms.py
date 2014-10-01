@@ -36,8 +36,8 @@ def a_star(graph, current, end):
 
     openlist.append(current)
     while len(openlist) is not 0:
-        current = min(openlist, key=lambda inst: inst.h)  #Her må vi regne ut h verdien
-        if current == end:  #Board.get_goal()
+        current = min(openlist, key=lambda inst: inst.f)
+        if current == end:
             logging.debug('A* took %d seconds to run.' % time.time() - start_time)
             return retracepath(current)
         openlist.remove(current)
