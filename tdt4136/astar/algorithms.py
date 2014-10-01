@@ -5,6 +5,7 @@ This file contains different graph algorithms
 
 import logging
 import time
+from heapq import *
 
 
 def a_star(graph, current, end):
@@ -15,11 +16,12 @@ def a_star(graph, current, end):
     :param current: The node representing the starting point
     """
 
-    logging.debug('Starting A* with: %s' % repr(graph))
+    logging.debug('Starting A*')
     start_time = time.time()
 
     openlist = []
-    closedlist = []
+    heapify(openlist)
+    closedlist = set()
     path = []
 
     def retracepath(c):
@@ -28,28 +30,33 @@ def a_star(graph, current, end):
         :param c:
         :return:
         """
+        if c.parent is not None:
+            logging.debug('Retrace on %d, %d with parent %s' % (c.x, c.y, str(c.parent)))
         path.insert(0, c)
         if c.parent is None:
-            logging.debug('A* took %d seconds to run.' % time.time() - start_time)
+            logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
             return
         retracepath(c.parent)
 
-    openlist.append(current)
-    while len(openlist) is not 0:
-        current = min(openlist, key=lambda inst: inst.f)
-        if current == end:
-            logging.debug('A* took %d seconds to run.' % time.time() - start_time)
+    heappush(openlist, current)
+    while openlist:
+        current = heappop(openlist)
+
+        if current is end:
+            logging.debug('Reached destination')
+            logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
             return retracepath(current)
-        openlist.remove(current)
-        closedlist.append(current)
+
+        closedlist.add(current)
         for tile in graph[current]:
             if tile not in closedlist:
-                tile.h = (abs(end.x - tile.x)+abs(end.y - tile.y))*10  #?
+                tile.h = (abs(end.x - tile.x)+abs(end.y - tile.y))*10
                 if tile not in openlist:
                     openlist.append(tile)
+                logging.debug('Adding %s as parent of %s' % (current, tile))
                 tile.parent = current
 
-    logging.debug('A* took %d seconds to run.' % time.time() - start_time)
+    logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
     return path
 
 
@@ -62,7 +69,7 @@ def dfs(graph, start):
     :return: Reurns a set of nodes in the order they were visited
     """
 
-    logging.debug('Starting A* with: %s' % repr(graph))
+    logging.debug('Starting DFS')
     start_time = time.time()
 
     visited, stack = set(), [start]
@@ -72,11 +79,11 @@ def dfs(graph, start):
             visited.add(vertex)
             stack.extend(graph[vertex] - visited)
 
-    logging.debug('A* took %d seconds to run.' % time.time() - start_time)
+    logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
     return visited
 
 
-def dfs(graph, start, visited=None):
+def bfs(graph, start, visited=None):
     """
     Breadth-First-Search
 
@@ -86,7 +93,7 @@ def dfs(graph, start, visited=None):
     :return: Resutns a set of nodes in the order they were visited
     """
 
-    logging.debug('Starting A* with: %s' % repr(graph))
+    logging.debug('Starting BFS')
     start_time = time.time()
 
     if visited is None:
@@ -95,5 +102,5 @@ def dfs(graph, start, visited=None):
     for next_node in graph[start] - visited:
         dfs(graph, next_node, visited)
 
-    logging.debug('A* took %d seconds to run.' % time.time() - start_time)
+    logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
     return visited

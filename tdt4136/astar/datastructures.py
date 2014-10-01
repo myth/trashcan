@@ -65,6 +65,7 @@ class Board(object):
         """
         Returns coordinates for the starting node
         """
+
         return self.get_point('A')
 
     def get_goal(self):
@@ -79,10 +80,10 @@ class Board(object):
         This function returns the x and y coordinates for a given node
         :param node: An instance of Node
         """
-        for x in xrange(len(self.matrix)):
-            for y in xrange(len(self.matrix[x])):
-                if y == node:
-                    return x, y
+        for y in xrange(len(self.matrix)):
+            for x in xrange(len(self.matrix[y])):
+                if self.matrix[y][x].c == node:
+                    return self.matrix[y][x]
 
 
 class Node(object):
