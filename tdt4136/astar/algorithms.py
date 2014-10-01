@@ -51,10 +51,9 @@ def a_star(graph, current, end):
         closedlist.add(current)
         for tile in graph[current]:
             if tile not in closedlist:
-                tile.h = (abs(end.x - tile.x)+abs(end.y - tile.y))*10
-                tile.update()
+                tile.update(tile.manhattan(end), current.g + tile.g)
                 if tile not in openlist:
-                    openlist.append(tile)
+                    heappush(openlist, tile)
                 logging.debug('Adding %s as parent of %s' % (current, tile))
                 tile.parent = current
 

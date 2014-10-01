@@ -187,16 +187,17 @@ class Node(object):
 
         return self.f > other.f
 
-    def manhattan(self, board):
+    def manhattan(self, end):
         """
-        :param board: is an instance of a board
+        :param end: The instance of the end node
         :return: Returning the h value for a given node
         """
 
-        x_dest, y_dest = board.get_goal()
+        x_dest = end.x
+        y_dest = end.y
 
-        xd = x_dest - self.x
-        yd = y_dest - self.y
+        xd = abs(x_dest - self.x)
+        yd = abs(y_dest - self.y)
 
         return abs(xd) + abs(yd)
 
