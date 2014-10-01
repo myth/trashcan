@@ -50,6 +50,8 @@ def a_star(graph, current, end):
 
         closedlist.add(current)
         for tile in graph[current]:
+            if not tile.walkable:
+                closedlist.add(tile)
             if tile not in closedlist:
                 tile.h = (abs(end.x - tile.x)+abs(end.y - tile.y))*10
                 tile.update()

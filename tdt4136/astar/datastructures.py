@@ -127,6 +127,8 @@ class Node(object):
         # Char represented in the map, '.', '#', A or B
         self.c = c
 
+        self.walkable = True
+
         # Is the node walkable
         if self.c == '#':
             self.walkable = False
@@ -140,8 +142,8 @@ class Node(object):
             self.color = 'pink'
         elif self.c == 'B':
             self.color = 'red'
-        else:
-            self.walkable = True
+
+
 
             # Establish weights and colors
             if self.c == 'w':
@@ -160,10 +162,12 @@ class Node(object):
                 self.g = 1
                 self.color = 'brown'
 
-    def update(self):
+    def update(self, new_g, new_h):
         """
         Update the F-value based on the G and H values
         """
+        self.g = new_g
+        self.h = new_h
         self.f = self.g + self.h
 
     def __eq__(self, other):
