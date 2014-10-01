@@ -37,11 +37,11 @@ if __name__ == '__main__':
 
     logging.basicConfig(filename='debug.log', level=logging.DEBUG)
     logging.debug('Starting program at %s' % datetime.datetime.utcnow().strftime('%H:%M:%S'))
-    
+
     root = Tk()
     center_window(root)
     app = Main(root)
 
-    
+
 
     root.mainloop()

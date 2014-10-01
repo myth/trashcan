@@ -42,6 +42,9 @@ class Main(Frame):
         boardsmenu = Menu(menubar)
         menubar.add_cascade(label=u'File', menu=filemenu)
         menubar.add_cascade(label=u'Boards', menu=boardsmenu)
+        algorithmmenu = Menu(menubar)
+        menubar.add_cascade(label=u'Algorithms', menu=algorithmmenu)
+        algorithmmenu.add_command(label=u'Astar', command=self.test_astar)
 
         self.add_boards_to_menu(boardsmenu)
 
@@ -94,3 +97,8 @@ class Main(Frame):
         Close the application
         """
         self.quit()
+
+    def test_astar(self):
+        logging.debug('Start %s' % self.board.get_start())
+        logging.debug('Dest %s' % self.board.get_goal())
+        logging.debug(repr(a_star(self.board.graph, self.board.get_start(), self.board.get_goal())))
