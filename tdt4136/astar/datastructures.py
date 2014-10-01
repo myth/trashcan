@@ -112,6 +112,9 @@ class Node(object):
         # Movment cost from one node to another node. Values given i exercise
         self.g = 0
 
+        # Cost to move to this node
+        self.arc_cost = 0
+
         # F-value is G+H
         self.f = self.g + self.h
 
@@ -137,38 +140,37 @@ class Node(object):
         # Add some colors to other states aswell
         elif self.c == '.':
             self.color = 'green'
-            self.g = 1
+            self.arc_cost = 1
         elif self.c == 'A':
             self.color = 'pink'
         elif self.c == 'B':
             self.color = 'red'
 
-
+        else:
 
             # Establish weights and colors
             if self.c == 'w':
-                self.g = 100
+                self.arc_cost = 100
                 self.color = 'blue'
             elif self.c == 'm':
-                self.g = 50
+                self.arc_cost = 50
                 self.color = 'grey'
             elif self.c == 'f':
-                self.g = 10
+                self.arc_cost = 10
                 self.color = 'green'
             elif self.c == 'g':
-                self.g = 5
+                self.arc_cost = 5
                 self.color = 'lime green'
             elif self.c == 'r':
-                self.g = 1
+                self.arc_cost = 1
                 self.color = 'brown'
 
-    def update(self, new_g, new_h):
+    def update(self, new_g=0):
         """
         Update the F-value based on the G and H values
         """
         self.g = new_g
-        self.h = new_h
-        self.f = self.g + self.h
+        self.f = self.g
 
     def __eq__(self, other):
         """
@@ -183,6 +185,20 @@ class Node(object):
         """
 
         return self.f < other.f
+
+    def __cmp__(self, other):
+        """
+        Comparable function
+
+        :param other: Other node
+        :return: -1, 0 or 1
+        """
+        if self.f < other.f:
+            return -1
+        elif self.f > other.f:
+            return 1
+        else:
+            return 0
 
     def __gt__(self, other):
         """

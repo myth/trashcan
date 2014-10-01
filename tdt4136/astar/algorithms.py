@@ -41,6 +41,7 @@ def a_star(graph, current, end):
     heappush(openlist, current)
     while openlist:
         current = heappop(openlist)
+        logging.debug('Current best is: %s with %d' % (current, current.f))
 
         if current is end:
             logging.debug('Reached destination')
@@ -53,11 +54,14 @@ def a_star(graph, current, end):
             if not tile.walkable:
                 closedlist.add(tile)
             if tile not in closedlist:
-                tile.update(tile.manhattan(end), current.g + tile.g)
+                tile.update(new_g=current.g + tile.arc_cost)
                 if tile not in openlist:
                     heappush(openlist, tile)
-                logging.debug('Adding %s as parent of %s' % (current, tile))
-                tile.parent = current
+                    tile.parent = current
+            else:
+                if current.g + tile.arc_cost < tile.g:
+                    tile.parent = current
+                    tile.g = current.g + tile.arc_cost
 
     logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
     return path
