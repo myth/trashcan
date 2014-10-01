@@ -8,7 +8,7 @@ import time
 from heapq import *
 
 
-def a_star(graph, current, end):
+def a_star(neighbors, current, end):
     """
     the A* algorithm. Takes in a graph, current position and destination
     :param graph: The matrix of nodes
@@ -16,71 +16,84 @@ def a_star(graph, current, end):
     :param current: The node representing the starting point
     """
 
+    def retracepath(c, path=[]):
+        """
+        Path retrace function
+
+        :param c: An instance of Node
+        :param path: The backtrack list
+        :return: The complete path
+        """
+
+        path.insert(0, c)
+
+        if c.parent is None:
+            return path
+        else:
+            return retracepath(c.parent, path)
+
     logging.debug('Starting A*')
     start_time = time.time()
 
-    openlist = []
-    heapify(openlist)
-    closedlist = set()
-    path = []
+    openset = []
+    heapify(openset)
+    closedset = set()
+    g_score = {}
 
-    def retracepath(c):
-        """
-        retracepath steps back through the visit-tree and creates the path from start to end
-        :param c:
-        :return:
-        """
-
-        if c is not None:
-            logging.debug('Retrace on %d, %d with parent %s' % (c.x, c.y, str(c.parent)))
-            path.append(c)
-
-            if c.parent is None:
-                return
-
-            retracepath(c.parent)
-    
     # Add the starting node to the heap
-    heappush(openlist, current)
+    heappush(openset, current)
 
     # As long as there are nodes left in the min-heap queue
-    while openlist:
+    while openset:
 
         # Get the first element from the queue (The one with the lowest G-value)
-        current = heappop(openlist)
+        current = heappop(openset)
 
-        # Since we've now visited the current node, we add it to the closed set
-        closedlist.add(current)
+        logging.debug('Current node is %s' % current)
+        logging.debug(repr(openset))
+        logging.debug('H is %f' % current.h)
+        logging.debug('G is %f' % current.g)
+        logging.debug('--------------------------------------------------------')
 
-        # If we have reached the end node, perform the traceback, reverse the list and break out
+        # If we have reached the end node, perform the traceback,
+        # reverse the list and break out
         if current is end:
             logging.debug('Reached destination %s.' % current)
-            retracepath(current)
-            path.reverse()
-            break
+            return retracepath(current), openset, closedset
+
+        # Since we've now visited the current node, we add it to the closed set
+        closedset.add(current)
 
         # For each adjacent neighbor to the current node
-        for neighbor in graph[current]:
+        for neighbor in neighbors[current]:
 
-            # If the node has not been visited before, set an initial G-value and set parent
-            # Also add the node to the openlist so we can visit it later
-            if neighbor not in closedlist:
-                neighbor.update(new_g = current.g + neighbor.arc_cost)
+            # If node has already been checked out, continue
+            if neighbor in closedset:
+                continue
+
+            # What will the cost be with turrent path
+            temp_cost = current.g + neighbor.arc_cost
+
+            # If the node has not been added to the openset
+            if neighbor not in openset:
+                neighbor.set_g(temp_cost)
+                neighbor.update_f()
                 neighbor.parent = current
-                heappush(openlist, neighbor)
+                heappush(openset, neighbor)
 
-            # If the node has already been visited
-            else:
-                # Check if this new path has a lower G-value than the existing one
-                # If so, update it and swap the parent
-                if neighbor.g > current.g + neighbor.arc_cost:
-                    neighbor.parent = current
-                    neighbor.update(new_g=current.g + neighbor.arc_cost)
+            # If the node is in the openset, but this path is better
+            elif temp_cost < neighbor.g:
+                neighbor.parent = current
+                neighbor.set_g(temp_cost)
+                neighbor.update_f()
+        
+        # Order the heap based on the changed values (Uncertain if we have to do this)
+        openset.sort()
 
     logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
 
-    # Returns the path
-    return path
+    # Algo failed
+    return retracepath(current), openset, closedset
 
 
 def dfs(graph, start):

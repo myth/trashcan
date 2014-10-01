@@ -79,7 +79,7 @@ class Main(Frame):
                 self.canvas.create_rectangle(*coords,
                                              fill=self.board.matrix[y][x].color)
 
-        self.board.update_manhattan_distance()
+        self.board.create_h_values()
 
     def add_boards_to_menu(self, menu):
         """
@@ -99,21 +99,27 @@ class Main(Frame):
         """
         self.quit()
 
-    def draw_trail(self, trail):
+    def draw_markers(self, nodes, icon):
         """
         This helper method draws dots on the nodes visited by a particular algorithm,
         specified by a list if nodes in the order the algorithm visited them.
 
         :param trail: A list of nodes that are to be drawn onto the map, represented by dots.
         """
-        for node in trail:
+        for node in nodes:
             coords = (
                 node.x * 30 + 2 + 10,
                 node.y * 30 + 2 + 10,
                 node.x * 30 + 32 - 10,
                 node.y * 30 + 32 - 10,
             )
-            self.canvas.create_oval(*coords, fill='cyan', width=0)
+            if icon == 'path':
+                self.canvas.create_oval(*coords, fill='cyan', width=0)
+            elif icon == 'open':
+                self.canvas.create_oval(*coords, fill='black', width=0)
+            elif icon == 'closed':
+                self.canvas.create_line(*coords)
+                self.canvas.create_line(coords[2], coords[1], coords[0], coords[3])
 
     def perform_astar(self):
         """
@@ -123,5 +129,10 @@ class Main(Frame):
         logging.debug('Start %s' % self.board.get_start())
         logging.debug('Dest %s' % self.board.get_goal())
 
-        trail = a_star(self.board.graph, self.board.get_start(), self.board.get_goal())
-        self.draw_trail(trail)
+        trail, openlist, closedlist = a_star(self.board.graph, self.board.get_start(), self.board.get_goal())
+        self.draw_markers(trail, 'path')
+        self.draw_markers(openlist, 'open')
+        for node in trail:
+            if node in closedlist:
+                closedlist.remove(node)
+        self.draw_markers(closedlist, 'closed')

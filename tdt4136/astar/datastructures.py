@@ -3,6 +3,7 @@
 This module contains the classes for Board and Node objects
 """
 from itertools import product
+from math import sqrt
 import logging
 
 
@@ -52,34 +53,46 @@ class Board(object):
 
         logging.debug('Creating graph: %d,%d,%d,%d' % (left, top, right, bottom))
 
-        for y in xrange(top, bottom):
-            for x in xrange(left, right):
+        for y in range(len(matrix)):
+            for x in range(len(matrix[y])):
+                
+                # If it is not walkable, just ignore it
+                if not matrix[y][x].walkable:
+                    continue
+                
+                # Initialize an empty neighbor list
                 graph[matrix[y][x]] = []
+
+                # Make a cartesian product of adjacent Nodes.
+                # Ignores self, out of bounds, diagonals and non-walkables
                 for i, j in product([-1, 0, 1], [-1, 0, 1]):
-                    if x == 0 and y == 0:
+                    if i == 0 and j == 0:
                         continue
-                    if not (left <= x + i < right):
+                    if not (left <= (x + i) <= right):
                         continue
-                    if not (top <= y + j < bottom):
+                    if not (top <= (y + j) <= bottom):
                         continue
-                    if (abs(i) + abs(j) > 1):
+                    if abs(i) + abs(j) > 1:
                         continue
-                    if not matrix[y+j][x+i].walkable:
+                    try:
+                        if not matrix[y+j][x+i].walkable:
+                            continue
+                    except IndexError:
                         continue
 
                     graph[matrix[y][x]].append(matrix[y+j][x+i])
 
         return graph
 
-    def update_manhattan_distance(self):
+    def create_h_values(self):
         """
-        This method will update manhattan distance on all Nodes
+        Sets the manhattan distance to the end node
         """
-        end = self.get_goal()
-        for y in self.matrix:
-            for x in y:
-                x.h = Node.manhattan(x, end)
 
+        end = self.get_goal()
+
+        for node in self.graph:
+            node.h = sqrt((node.x - end.x)**2 + (node.y - end.y)**2)
 
     def get_start(self):
         """
@@ -152,6 +165,7 @@ class Node(object):
         if self.c == '#':
             self.walkable = False
             self.color = 'black'
+            self.arc_cost = 100000
 
         # Add some colors to other states aswell
         elif self.c == '.':
@@ -181,11 +195,16 @@ class Node(object):
                 self.arc_cost = 1
                 self.color = 'brown'
 
-    def update(self, new_g=0):
+    def set_g(self, new_g):
         """
-        Update the F-value based on the G and H values
+        Update the G-value
         """
         self.g = new_g
+
+    def update_f(self):
+        """
+        Updates the F value of this node
+        """
         self.f = self.g + self.h
 
     def __eq__(self, other):
@@ -209,24 +228,11 @@ class Node(object):
 
         return self.f > other.f
 
-    @staticmethod
-    def manhattan(start, end):
-        """
-        :param start: THe instance of the start node
-        :param end: The instance of the end node
-        :return: Returning the h value for a given node
-        """
-
-        xd = abs(end.x - start.x)
-        yd = abs(end.y - start.y)
-
-        return abs(xd) + abs(yd)
-
     def __unicode__(self):
-        return 'Node %d,%d (%s)' % (self.x, self.y, self.color)
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.f)
 
     def __repr__(self):
-        return 'Node %d,%d (%s)' % (self.x, self.y, self.color)
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.f)
 
     def __str__(self):
-        return 'Node %d,%d (%s)' % (self.x, self.y, self.color)
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.f)
