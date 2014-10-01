@@ -43,7 +43,7 @@ class Main(Frame):
         menubar.add_cascade(label=u'Boards', menu=boardsmenu)
         algorithmmenu = Menu(menubar)
         menubar.add_cascade(label=u'Algorithms', menu=algorithmmenu)
-        algorithmmenu.add_command(label=u'Astar', command=self.test_astar)
+        algorithmmenu.add_command(label=u'Astar', command=self.perform_astar)
 
         self.add_boards_to_menu(boardsmenu)
 
@@ -99,13 +99,13 @@ class Main(Frame):
         """
         self.quit()
 
-    def test_astar(self):
-        logging.debug('Start %s' % self.board.get_start())
-        logging.debug('Dest %s' % self.board.get_goal())
-        trail = a_star(self.board.graph, self.board.get_start(), self.board.get_goal())
+    def draw_trail(self, trail):
+        """
+        This helper method draws dots on the nodes visited by a particular algorithm,
+        specified by a list if nodes in the order the algorithm visited them.
 
-        logging.debug('Retrace path:\n %s' % repr(trail))
-
+        :param trail: A list of nodes that are to be drawn onto the map, represented by dots.
+        """
         for node in trail:
             coords = (
                 node.x * 30 + 2 + 10,
@@ -114,3 +114,14 @@ class Main(Frame):
                 node.y * 30 + 32 - 10,
             )
             self.canvas.create_oval(*coords, fill='cyan', width=0)
+
+    def perform_astar(self):
+        """
+        This command is triggered from the application Algorithm menu, and initiates the a_star algorithm.
+        It then calls the draw_trail helper method.
+        """
+        logging.debug('Start %s' % self.board.get_start())
+        logging.debug('Dest %s' % self.board.get_goal())
+
+        trail = a_star(self.board.graph, self.board.get_start(), self.board.get_goal())
+        self.draw_trail(trail)
