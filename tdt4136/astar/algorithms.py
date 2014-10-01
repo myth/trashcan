@@ -39,30 +39,47 @@ def a_star(graph, current, end):
                 return
 
             retracepath(c.parent)
-
+    
+    # Add the starting node to the heap
     heappush(openlist, current)
 
+    # As long as there are nodes left in the min-heap queue
     while openlist:
+
+        # Get the first element from the queue (The one with the lowest G-value)
         current = heappop(openlist)
+
+        # Since we've now visited the current node, we add it to the closed set
         closedlist.add(current)
 
+        # If we have reached the end node, perform the traceback, reverse the list and break out
         if current is end:
             logging.debug('Reached destination %s.' % current)
             retracepath(current)
             path.reverse()
             break
 
+        # For each adjacent neighbor to the current node
         for neighbor in graph[current]:
+
+            # If the node has not been visited before, set an initial G-value and set parent
+            # Also add the node to the openlist so we can visit it later
             if neighbor not in closedlist:
                 neighbor.update(new_g = current.g + neighbor.arc_cost)
                 neighbor.parent = current
                 heappush(openlist, neighbor)
+
+            # If the node has already been visited
             else:
+                # Check if this new path has a lower G-value than the existing one
+                # If so, update it and swap the parent
                 if neighbor.g > current.g + neighbor.arc_cost:
                     neighbor.parent = current
                     neighbor.update(new_g=current.g + neighbor.arc_cost)
 
     logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
+
+    # Returns the path
     return path
 
 
