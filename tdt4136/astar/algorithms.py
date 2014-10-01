@@ -30,7 +30,7 @@ def a_star(graph, current, end):
         :param c:
         :return:
         """
-        if c.parent is not None:
+        if c is not None:
             logging.debug('Retrace on %d, %d with parent %s' % (c.x, c.y, str(c.parent)))
         path.insert(0, c)
         if c.parent is None:
@@ -45,7 +45,8 @@ def a_star(graph, current, end):
         if current is end:
             logging.debug('Reached destination')
             logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
-            return retracepath(current)
+            retracepath(current)
+            break
 
         closedlist.add(current)
         for tile in graph[current]:
