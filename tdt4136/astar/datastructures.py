@@ -2,7 +2,8 @@
 """
 This module contains the classes for Board and Node objects
 """
-
+from itertools import product
+import logging
 
 class Board(object):
     """
@@ -15,6 +16,7 @@ class Board(object):
         Initialize the board by creating the matrix
         """
         self.matrix = self.make_matrix(board)
+        self.graph = self.make_graph(self.matrix)
 
     @staticmethod
     def make_matrix(board):
@@ -32,6 +34,34 @@ class Board(object):
                 matrix[y][x] = Node(x=x, y=y, c=matrix[y][x])
 
         return matrix
+
+    def make_graph(self, matrix):
+        """
+        Create a dictionary of the nodes in the board matrix
+        :param matrix: A two dimensional list of Node objects
+        """
+
+        graph = {}
+
+        top = 0
+        left = 0
+        right = len(matrix[0]) - 1
+        bottom = len(matrix) - 1
+
+        logging.debug('Creating graph: %d,%d,%d,%d' % (left, top, right, bottom))
+
+        for y in xrange(top, bottom):
+            for x in xrange(left, right):
+                graph[matrix[y][x]] = []
+                for i, j in product([-1, 0, 1], [-1, 0, 1]):
+                    if not (left <= x + i < right): continue
+                    if not (top <= y + j < bottom): continue
+
+                    logging.debug('Checking adjacency: %d,%d' % (x + i, y + j))
+
+                    graph[matrix[y][x]].append(matrix[y+j][x+i])
+
+        return graph
 
     def get_start(self):
         """
@@ -166,4 +196,7 @@ class Node(object):
         yd = y_dest - self.y
 
         return abs(xd) + abs(yd)
+
+    def __unicode__(self):
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.c)
 
