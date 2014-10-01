@@ -79,6 +79,8 @@ class Main(Frame):
                 self.canvas.create_rectangle(*coords,
                                              fill=self.board.matrix[y][x].color)
 
+        self.board.update_manhattan_distance()
+
     def add_boards_to_menu(self, menu):
         """
         Dynamically create the boards submenu
@@ -106,9 +108,9 @@ class Main(Frame):
 
         for node in trail:
             coords = (
-                node.x * 30 + 2,
-                node.y * 30 + 2,
-                node.x * 30 + 32,
-                node.y * 30 + 32,
+                node.x * 30 + 2 + 10,
+                node.y * 30 + 2 + 10,
+                node.x * 30 + 32 - 10,
+                node.y * 30 + 32 - 10,
             )
-            self.canvas.create_oval(*coords, fill='red', width=0)
+            self.canvas.create_oval(*coords, fill='cyan', width=0)

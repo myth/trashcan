@@ -30,38 +30,37 @@ def a_star(graph, current, end):
         :param c:
         :return:
         """
+
         if c is not None:
             logging.debug('Retrace on %d, %d with parent %s' % (c.x, c.y, str(c.parent)))
-        path.insert(0, c)
-        if c.parent is None:
-            logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
-            return
-        retracepath(c.parent)
+            path.append(c)
+
+            if c.parent is None:
+                return
+
+            retracepath(c.parent)
 
     heappush(openlist, current)
+
     while openlist:
         current = heappop(openlist)
-        logging.debug('Current best is: %s with %d' % (current, current.f))
+        closedlist.add(current)
 
         if current is end:
-            logging.debug('Reached destination')
-            logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
+            logging.debug('Reached destination %s.' % current)
             retracepath(current)
+            path.reverse()
             break
 
-        closedlist.add(current)
-        for tile in graph[current]:
-            if not tile.walkable:
-                closedlist.add(tile)
-            if tile not in closedlist:
-                tile.update(new_g=current.g + tile.arc_cost)
-                if tile not in openlist:
-                    heappush(openlist, tile)
-                    tile.parent = current
+        for neighbor in graph[current]:
+            if neighbor not in closedlist:
+                neighbor.update(new_g = current.g + neighbor.arc_cost)
+                neighbor.parent = current
+                heappush(openlist, neighbor)
             else:
-                if current.g + tile.arc_cost < tile.g:
-                    tile.parent = current
-                    tile.g = current.g + tile.arc_cost
+                if neighbor.g > current.g + neighbor.arc_cost:
+                    neighbor.parent = current
+                    neighbor.update(new_g=current.g + neighbor.arc_cost)
 
     logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
     return path

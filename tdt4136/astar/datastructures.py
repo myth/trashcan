@@ -56,14 +56,30 @@ class Board(object):
             for x in xrange(left, right):
                 graph[matrix[y][x]] = []
                 for i, j in product([-1, 0, 1], [-1, 0, 1]):
+                    if x == 0 and y == 0:
+                        continue
                     if not (left <= x + i < right):
                         continue
                     if not (top <= y + j < bottom):
+                        continue
+                    if (abs(i) + abs(j) > 1):
+                        continue
+                    if not matrix[y+j][x+i].walkable:
                         continue
 
                     graph[matrix[y][x]].append(matrix[y+j][x+i])
 
         return graph
+
+    def update_manhattan_distance(self):
+        """
+        This method will update manhattan distance on all Nodes
+        """
+        end = self.get_goal()
+        for y in self.matrix:
+            for x in y:
+                x.h = Node.manhattan(x, end)
+
 
     def get_start(self):
         """
@@ -170,7 +186,7 @@ class Node(object):
         Update the F-value based on the G and H values
         """
         self.g = new_g
-        self.f = self.g
+        self.f = self.g + self.h
 
     def __eq__(self, other):
         """
@@ -186,20 +202,6 @@ class Node(object):
 
         return self.f < other.f
 
-    def __cmp__(self, other):
-        """
-        Comparable function
-
-        :param other: Other node
-        :return: -1, 0 or 1
-        """
-        if self.f < other.f:
-            return -1
-        elif self.f > other.f:
-            return 1
-        else:
-            return 0
-
     def __gt__(self, other):
         """
         Comparable function
@@ -207,25 +209,24 @@ class Node(object):
 
         return self.f > other.f
 
-    def manhattan(self, end):
+    @staticmethod
+    def manhattan(start, end):
         """
+        :param start: THe instance of the start node
         :param end: The instance of the end node
         :return: Returning the h value for a given node
         """
 
-        x_dest = end.x
-        y_dest = end.y
-
-        xd = abs(x_dest - self.x)
-        yd = abs(y_dest - self.y)
+        xd = abs(end.x - start.x)
+        yd = abs(end.y - start.y)
 
         return abs(xd) + abs(yd)
 
     def __unicode__(self):
-        return 'Node %d,%d (%s)' % (self.x, self.y, self.c)
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.color)
 
     def __repr__(self):
-        return 'Node %d,%d (%s)' % (self.x, self.y, self.c)
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.color)
 
     def __str__(self):
-        return 'Node %d,%d (%s)' % (self.x, self.y, self.c)
+        return 'Node %d,%d (%s)' % (self.x, self.y, self.color)
