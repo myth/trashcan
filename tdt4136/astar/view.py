@@ -24,6 +24,7 @@ class Main(Frame):
 
         self.parent = parent
         self.board = None
+        self.current_file = None
         self.canvas = None
         self.view_level = 0
         self.init_ui()
@@ -47,6 +48,7 @@ class Main(Frame):
         menubar.add_cascade(label=u'Options', menu=optionsmenu)
        
         algorithmmenu.add_command(label=u'Astar', command=self.perform_astar)
+        algorithmmenu.add_command(label=u'BFS', command=self.perform_bfs)
 
         optionsmenu.add_command(label=u'Show trail only', state=DISABLED, command=self.only_show_trail)
         optionsmenu.add_command(label=u'Show all states', command=self.show_all_states)
@@ -63,16 +65,17 @@ class Main(Frame):
 
     def createmap(self, f=None):
         """
-        Creates a canvas map of colored squares based on the board created
-        by the file parameter and the color field of the Node instances.
+        Creates a board object with a matrix and adjacency graph given
+        by the file parameter.
         :param f: Takes a full path to a board file
         """
 
         logging.debug('Creating map from %s' % os.path.basename(f))
+        self.current_file = f
 
         with open(f) as board:
             self.board = Board(board.read())
-
+        
         self.canvas.delete('all')
 
         for y in xrange(len(self.board.matrix)):
@@ -128,17 +131,54 @@ class Main(Frame):
         This command is triggered from the application Algorithm menu, and initiates the a_star algorithm.
         It then calls the draw_markers helper method to draw trail, openset and closedset depending on view_level.
         """
+
+        # Do nothing if no board is loaded
+        if self.board is None:
+            return
+
         logging.debug('Start %s' % self.board.get_start())
         logging.debug('Dest %s' % self.board.get_goal())
 
+        # Clear the canvas and redraw the map
+        self.createmap(self.current_file)
+
         trail, openlist, closedlist = a_star(self.board.graph, self.board.get_start(), self.board.get_goal())
-        self.draw_markers(trail, 'path')
+ 
         if self.view_level > 0:
             self.draw_markers(openlist, 'open')
             for node in trail:
                 if node in closedlist:
                     closedlist.remove(node)
             self.draw_markers(closedlist, 'closed')
+
+        self.draw_markers(trail, 'path')
+
+    def perform_bfs(self):
+        """
+        This command is triggered from the application Algorithm menu, and initiates the BFS algorithm.
+        It then calls the draw_markers helper method to draw trail, openset and closedset depending on view_level.
+        """
+
+        # Do nothing if no board is loaded
+        if self.board is None:
+            return
+
+        logging.debug('Start %s' % self.board.get_start())
+        logging.debug('End %s' % self.board.get_goal())
+
+        # Clear the canvas and re-draw the tiles
+        self.createmap(self.current_file)
+
+        trail, openlist, closedlist = bfs(self.board.graph, self.board.get_start(), self.board.get_goal())
+
+        if self.view_level > 0:
+            self.draw_markers(openlist, 'open')
+            for node in trail:
+                if node in closedlist:
+                    closedlist.remove(node)
+            self.draw_markers(closedlist, 'closed')
+
+        self.draw_markers(trail, 'path')
 
     def only_show_trail(self):
         """

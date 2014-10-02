@@ -209,21 +209,21 @@ class Node(object):
 
     def __eq__(self, other):
         """
-        Comparable function
+        Tests for equality, the == operator
         """
 
         return self.f == other.f
 
     def __lt__(self, other):
         """
-        Compareble function
+        Test for less than, the < operator
         """
 
         return self.f < other.f
 
     def __gt__(self, other):
         """
-        Comparable function
+        Test for greater than, the > operator
         """
 
         return self.f > other.f

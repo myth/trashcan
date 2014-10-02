@@ -8,6 +8,23 @@ import time
 from heapq import *
 
 
+def retracepath(c):
+    """
+    Path retrace function
+
+    :param c: An instance of Node
+    :param path: The backtrack list
+    :return: The complete path
+    """
+
+    path = [c]
+
+    while c.parent is not None:
+        c = c.parent
+        path.insert(0, c)
+
+    return path
+
 def a_star(neighbors, current, end):
     """
     The A* algorithm. Takes in a graph, current position and destination
@@ -19,22 +36,6 @@ def a_star(neighbors, current, end):
     :param end: The instance of the goal node
     :param current: The node representing the starting point
     """
-
-    def retracepath(c, path=[]):
-        """
-        Path retrace function
-
-        :param c: An instance of Node
-        :param path: The backtrack list
-        :return: The complete path
-        """
-
-        path.insert(0, c)
-
-        if c.parent is None:
-            return path
-        else:
-            return retracepath(c.parent, path)
 
     logging.debug('Starting A*')
     start_time = time.time()
@@ -56,6 +57,7 @@ def a_star(neighbors, current, end):
         # reverse the list and break out
         if current is end:
             logging.debug('Reached destination %s.' % current)
+            logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
             return retracepath(current), openset, closedset
 
         # Since we've now visited the current node, we add it to the closed set
@@ -95,47 +97,48 @@ def a_star(neighbors, current, end):
     return retracepath(current), openset, closedset
 
 
-def dfs(graph, start):
-    """
-    Depth-First-Search.
-
-    :param graph: A graph/matrix of nodes
-    :param start: The starting position
-    :return: Reurns a set of nodes in the order they were visited
-    """
-
-    logging.debug('Starting DFS')
-    start_time = time.time()
-
-    visited, stack = set(), [start]
-    while stack:
-        vertex = stack.pop()
-        if vertex not in visited:
-            visited.add(vertex)
-            stack.extend(graph[vertex] - visited)
-
-    logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
-    return visited
-
-
-def bfs(graph, start, visited=None):
+def bfs(neighbors, start, end):
     """
     Breadth-First-Search
 
     :param graph: A graph/matrix of nodes
     :param start: The starting position
-    :param visited: Recursive pass-through variable that tracks visited nodes
     :return: Resutns a set of nodes in the order they were visited
     """
 
     logging.debug('Starting BFS')
     start_time = time.time()
 
-    if visited is None:
-        visited = set()
+    # Create the openset (queue) and closedset (visited)
+    visited = set()
     visited.add(start)
-    for next_node in graph[start] - visited:
-        dfs(graph, next_node, visited)
+    queue = [start]
+
+    # As long as there are items in queue
+    while queue:
+        
+        # Get the first one
+        current = queue.pop(0)
+
+        # Hooray, we found the end node
+        if current is end:
+            logging.debug('Reached destination.')
+            logging.debug('BFS took %f seconds to run.' % (time.time() - start_time))
+            return retracepath(current), queue, visited
+
+        # For all adjacent nodes to current
+        for node in neighbors[current]:
+
+            # If they have not been visited yet, update the parent
+            # add to visited, and throw the node into the queue
+            if node not in visited:
+                node.parent = current
+                visited.add(node)
+                queue.append(node)
 
     logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
-    return visited
+
+    # Return paths for debug purposes if algorithm fails
+    return retracepath(current), queue, visited
+
+
