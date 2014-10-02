@@ -236,3 +236,102 @@ class Node(object):
 
     def __str__(self):
         return 'Node %d,%d (%s)' % (self.x, self.y, self.f)
+
+class RushHourBoard(object):
+    """
+    This class contains a state of CarNodes in the Rush Hour Puzzle
+    """
+
+    def __init__(self, parent=None, cars=None):
+        """
+        :param parent: Parent state which can reach this state
+        """
+        self.parent = parent
+        self.cars = cars
+
+EAST_WEST = 0
+NORTH_SOUTH = 1
+
+class CarNode(object):
+    """
+    A CarNode is the container object for a Car on a RushHourBoard
+    """
+    def __init__(self, o, x, y, l):
+        """
+        :param o: Orientation of the Car, either NORTH_SOUTH or EAST_WEST
+        :param x: x-component of top-left corner
+        :param y: y-component of top-left corner
+        :param l: Length of the car
+        :param i: ID of the car. If ID == 0, it is the red car.
+        """
+        self.orientation = o
+        self.top_x = x
+        self.top_y = y
+        self.length = l
+
+    def blocks(self, other):
+        """
+        Checks if this CarNode is blocking other car node.
+        """
+        if self.orientation == other.orientation:
+            if self.orientation == NORTH_SOUTH:
+                if self.top_x == other.top_x:
+                    return True
+                return False
+            else:
+                if self.top_y == other.top_y:
+                    return True
+                return False
+        else:
+            if other.orientation == NORTH_SOUTH:
+                if self.top_x <= other.top_x < self.top_x + self.length:
+                    return True
+                return False
+            else:
+                if self.top_y <= other.top_y < self.top_y + self.length:
+                    return True
+                return False
+
+    @staticmethod
+    def overlaps(first, second):
+        """
+        Checks if two cars overlaps (an illegal state)
+        """
+        return first == second
+
+    def move(self, inc):
+        """
+        Moves this car node by inc in the direction of its orientation
+
+        :param inc: Either +1 or -1
+        :return: True if the move is possible and successful
+        """
+
+        return True
+
+    def __str__(self):
+        if self.orientation == NORTH_SOUTH:
+            bottom_x = self.top_x
+            bottom_y = self.top_y + self.length
+        else:
+            bottom_x = self.top_x + self.length
+            bottom_y = self.top_y
+        return '%d,%d-%d,%d' % (self.top_x, self.top_y, bottom_x, bottom_y)
+
+    def __unicode__(self):
+        if self.orientation == NORTH_SOUTH:
+            bottom_x = self.top_x
+            bottom_y = self.top_y + self.length
+        else:
+            bottom_x = self.top_x + self.length
+            bottom_y = self.top_y           
+        return '%d,%d-%d,%d' % (self.top_x, self.top_y, bottom_x, bottom_y)
+
+    def __repr__(self):
+        if self.orientation == NORTH_SOUTH:
+            bottom_x = self.top_x
+            bottom_y = self.top_y + self.length
+        else:
+            bottom_x = self.top_x + self.length
+            bottom_y = self.top_y
+        return '%d,%d-%d,%d' % (self.top_x, self.top_y, bottom_x, bottom_y)
