@@ -136,9 +136,62 @@ def bfs(neighbors, start, end):
                 visited.add(node)
                 queue.append(node)
 
-    logging.debug('A* took %f seconds to run.' % (time.time() - start_time))
+    
+    logging.debug('BFS took %f seconds to run.' % (time.time() - start_time))
 
     # Return paths for debug purposes if algorithm fails
     return retracepath(current), queue, visited
 
+def dijkstra(graph, start, end):
+    """
+    Dijkstras algorithm. We are re-using the base Node class for the priority queue.
+    All H-values are set to zero, so the G values will be representing the total cost.
+    Nodes are compared by F-value, which in this case will be the same as G.
 
+    :param graph: A graph dict of nodes and their neighbors
+    :param start: The starting position
+    :return: Resutns a set of nodes in the order they were visited  
+    """
+
+    logging.debug('Starting Dijkstra')
+    start_time = time.time()
+
+    visited = set()
+    queue = []
+    heapify(queue)
+
+    for node, neighbors in graph.items():
+        node.h = 0
+        if node is start:
+            node.g = 0
+            node.update_f()
+        else:
+            node.g = 1000000
+            node.update_f()
+        heappush(queue, node)
+
+    while queue:
+        current = heappop(queue)
+        visited.add(current)
+
+        logging.debug('Current node %s with Q %s' % (current, repr(queue)))
+
+        if current is end:
+            logging.debug('Reached destination.')
+            logging.debug('Dijkstra took %f seconds to run.' % (time.time() - start_time))
+            return retracepath(current), queue, visited
+
+        for node in graph[current]:
+            if node not in visited:
+                temp_cost = current.g + node.arc_cost
+                if temp_cost < node.g:
+                    node.set_g(temp_cost)
+                    node.update_f()
+                    node.parent = current
+
+        queue.sort()
+
+    logging.debug('Dijkstra took %f seconds to run.' % (time.time() - start_time))
+
+    # Return paths for debug purposes if algorithm fails
+    return retracepath(current), queue, visited

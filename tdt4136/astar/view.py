@@ -49,6 +49,7 @@ class Main(Frame):
        
         algorithmmenu.add_command(label=u'Astar', command=self.perform_astar)
         algorithmmenu.add_command(label=u'BFS', command=self.perform_bfs)
+        algorithmmenu.add_command(label=u'Dijkstra', command=self.perform_dijkstra)
 
         optionsmenu.add_command(label=u'Show trail only', state=DISABLED, command=self.only_show_trail)
         optionsmenu.add_command(label=u'Show all states', command=self.show_all_states)
@@ -179,6 +180,36 @@ class Main(Frame):
             self.draw_markers(closedlist, 'closed')
 
         self.draw_markers(trail, 'path')
+
+    def perform_dijkstra(self):
+        """
+        This command is triggered from the application Algorithm menu,
+        and initiates the Dijkstra algorithm.
+        It then calls the draw_markers helper method to draw trail,
+        openset and closedset depending on view_level.
+        """
+
+        # Do nothing if no board is loaded
+        if self.board is None:
+            return
+
+        logging.debug('Start %s' % self.board.get_start())
+        logging.debug('End %s' % self.board.get_goal())
+
+        # Clear the canvas and re-draw the tiles
+        self.createmap(self.current_file)
+
+        trail, openlist, closedlist = dijkstra(self.board.graph, self.board.get_start(), self.board.get_goal())
+
+        if self.view_level > 0:
+            self.draw_markers(openlist, 'open')
+            for node in trail:
+                if node in closedlist:
+                    closedlist.remove(node)
+            self.draw_markers(closedlist, 'closed')
+
+        self.draw_markers(trail, 'path')
+
 
     def only_show_trail(self):
         """
