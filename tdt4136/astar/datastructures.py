@@ -92,7 +92,7 @@ class Board(object):
         end = self.get_goal()
 
         for node in self.graph:
-            node.h = sqrt((node.x - end.x)**2 + (node.y - end.y)**2)
+            node.h = sqrt((node.x - end.x)**2 + (node.y - end.y)**2) * 1.5
 
     def get_start(self):
         """
