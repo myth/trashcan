@@ -130,17 +130,19 @@ class EggCarton(AbstractBoard):
         # If illegal state, return 0, else add up to see how far away we are from
         # the optimal state, total = 0, which means it is not possible to add more eggs
         # in either row, col or diag.
-        total = 0
+        available_slots = 0
         for x in concat:
             if x < 0:
                 return 0
-            total += x
+            available_slots += x
 
         # If we're at maximum eggs, return that shining numero uno
-        if total == 0:
+        if available_slots == 0:
             return 1
 
-        return 1.0 - (float(total) / float(maximum))
+        o = 1.0 - (float(available_slots) / float(maximum * 2))
+
+        return o if o >= 0 else 0
 
     def __str__(self):
         return repr(self.matrix) + '\n' + \
