@@ -60,8 +60,8 @@ class EggCarton(AbstractBoard):
         diags = []
         n = len(self.matrix)
 
-        for i in xrange(n):
-            for j in xrange(n):
+        for y in xrange(n):
+            for x in xrange(n):
                 a = 1
 
         return diags
@@ -83,6 +83,9 @@ class EggCarton(AbstractBoard):
         # Max total list sum for right and left diags
         maximum += ((len(self.matrix) * 2 - 1) - ((self.K - 1) * 2)) * 2
 
+        # If illegal state, return 0, else add up to see how far away we are from
+        # the optimal state, total = 0, which means it is not possible to add more eggs
+        # in either row, col or diag.
         for x in concat:
             if x < 0:
                 return 0
