@@ -12,12 +12,15 @@ class AbstractBoard(object):
     def __init__(self):
         self.matrix = None
         self.parent = None
+        self.M = None
+        self.N = None
 
     def create_matrix(self, rows, cols):
         """
         Generate an empty matrix of M rows and N cols
         """
-
+        self.M = rows
+        self.N = cols
         self.matrix = [[0 for col in range(cols)] for row in range(rows)]
 
 
@@ -43,11 +46,10 @@ class EggCarton(AbstractBoard):
         """
 
         cols = []
-        n = len(self.matrix)
 
-        for x in xrange(n):
+        for x in xrange(self.N):
             colsum = 0
-            for y in xrange(n):
+            for y in xrange(self.M):
                 colsum += self.matrix[y][x]
             cols.append(self.K - colsum)
 
@@ -57,14 +59,36 @@ class EggCarton(AbstractBoard):
         """
         Returns the delta of eggs in each diagonal compared to K
         """
+
         diags = []
-        n = len(self.matrix)
+        output = []
 
-        for y in xrange(n):
-            for x in xrange(n):
-                a = 1
+        # For the number of diagonals in a matrix of size self.M * self.M
+        for p in xrange(0, 2 * self.M - 1):
 
-        return diags
+            diag_up = []
+            diag_down = []
+
+            # Dynamic boundries to prevent indexes off the matrix
+            for q in xrange(max(0, p - self.M + 1), min(p, self.M - 1)):
+                
+                # Add the right-upward diags
+                diag_up.append(self.matrix[p - q][q])
+                # Add the right-downward diags
+                diag_down.append(self.matrix[p - q][self.M - 1 - q])
+
+            diags.append(diag_up)
+            diags.append(diag_down)
+
+        # Remove diagonals of size less than K for simplicity,
+        # and add diagonal sum to output.
+        for x in xrange(len(diags)):
+            if len(diags[x]) < self.K:
+                continue
+            else:
+                output.append(sum(diags[x]))
+
+        return output
 
     def objective(self):
         """
@@ -100,7 +124,11 @@ class EggCarton(AbstractBoard):
         return 1.0 - (float(total) / float(maximum))
 
     def __str__(self):
-        return repr(self.matrix) + '\n' + repr(self.check_rows()) + '\n' + repr(self.check_cols()) + '\nObjective value: %f' % self.objective()
+        return repr(self.matrix) + '\n' + \
+            repr(self.check_rows()) + '\n' + \
+            repr(self.check_cols()) + '\n' + \
+            repr(self.check_diags()) + '\n' + \
+            'Objective value: %f' % self.objective()
         
 
 class PegBoard(AbstractBoard):
