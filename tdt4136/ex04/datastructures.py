@@ -19,9 +19,59 @@ class AbstractBoard(object):
         """
         Generate an empty matrix of M rows and N cols
         """
+
         self.M = rows
         self.N = cols
         self.matrix = [[0 for col in range(cols)] for row in range(rows)]
+
+    def get_rows(self):
+        """
+        List of rows, just return the matrix
+        """
+
+        return self.matrix
+
+    def get_cols(self):
+        """
+        Return a list of colums
+        """
+
+        return [[self.matrix[y][x] for y in xrange(self.M)] for x in xrange(self.N)]
+
+    def get_diagonals(self):
+        """
+        Returns two lists of diagonals, the upward and the downward
+        """
+
+    def get_diags(self):
+        """
+        Returns two lists of diagonals in the matrix. Right-updward and Right-downward.
+        This method exploits the fact that all the exercise boards are squares
+        and not rectangles.
+        """
+
+        up = []
+        down = []
+
+        # For the number of adjacent diagonals in a matrix of size self.M * self.M
+        for p in xrange(0, self.M * 2 - 1):
+
+            diag_up = []
+            diag_down = []
+
+            # Dynamic boundries to prevent indexes off the matrix
+            for q in xrange(max(0, p - self.M + 1), min(p, self.M - 1)):
+                
+                # Add the right-upward diags
+                diag_up.append(self.matrix[p - q][q])
+                # Add the right-downward diags
+                diag_down.append(self.matrix[p - q][self.M - 1 - q])
+
+            # Add them to their respective lists
+            up.append(diag_up)
+            down.append(diag_down)
+
+        return up, down
 
 
 class EggCarton(AbstractBoard):
@@ -45,48 +95,19 @@ class EggCarton(AbstractBoard):
         Returns the delta of eggs in each row compared to K
         """
 
-        cols = []
-
-        for x in xrange(self.N):
-            colsum = 0
-            for y in xrange(self.M):
-                colsum += self.matrix[y][x]
-            cols.append(self.K - colsum)
-
-        return cols
+        return [self.K - sum(col) for col in self.get_cols()]
 
     def check_diags(self):
         """
         Returns the delta of eggs in each diagonal compared to K
         """
 
-        diags = []
-        output = []
-
-        # For the number of diagonals in a matrix of size self.M * self.M
-        for p in xrange(0, 2 * self.M - 1):
-
-            diag_up = []
-            diag_down = []
-
-            # Dynamic boundries to prevent indexes off the matrix
-            for q in xrange(max(0, p - self.M + 1), min(p, self.M - 1)):
-                
-                # Add the right-upward diags
-                diag_up.append(self.matrix[p - q][q])
-                # Add the right-downward diags
-                diag_down.append(self.matrix[p - q][self.M - 1 - q])
-
-            diags.append(diag_up)
-            diags.append(diag_down)
+        up, down = self.get_diags()
 
         # Remove diagonals of size less than K for simplicity,
         # and add diagonal sum to output.
-        for x in xrange(len(diags)):
-            if len(diags[x]) < self.K:
-                continue
-            else:
-                output.append(sum(diags[x]))
+        output = [sum(x) for x in up if len(x) >= self.K]
+        output.extend([sum(x) for x in down if len(x) >= self.K])
 
         return output
 
@@ -104,8 +125,10 @@ class EggCarton(AbstractBoard):
         total = 0
         # Max potential horiz and vertical board check values
         maximum = len(self.matrix) * self.K * 2
+        print maximum
         # Max total list sum for right and left diags
         maximum += ((len(self.matrix) * 2 - 1) - ((self.K - 1) * 2)) * 2
+        print maximum
 
         # If illegal state, return 0, else add up to see how far away we are from
         # the optimal state, total = 0, which means it is not possible to add more eggs
@@ -116,7 +139,6 @@ class EggCarton(AbstractBoard):
             total += x
 
         print total
-        print maximum
 
         if total == 0:
             return 1
