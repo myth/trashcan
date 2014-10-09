@@ -5,6 +5,7 @@ This is the main program file for the A* application
 Authors: Fredrik B. Tørnvall & Aleksander Skraastad
 """
 import datetime
+import logging
 
 from Tkinter import *
 

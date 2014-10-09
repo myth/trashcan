@@ -58,10 +58,7 @@ class Main(Frame):
 
         logging.debug('Creating map from %s' % os.path.basename(f))
         self.current_file = f
-
-        with open(f) as board:
-            # TODO: Represent board
-        
+       
         self.canvas.delete('all')
 
         # TODO: Map creation logic
