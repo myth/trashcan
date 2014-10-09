@@ -41,8 +41,8 @@ class AbstractBoard(object):
     def get_diags(self):
         """
         Returns two lists of diagonals in the matrix. Right-updward and Right-downward.
-        This method exploits the fact that all the exercise boards are squares
-        and not rectangles.
+        This method exploits the fact that all the exercise boards where diagonals are
+        relevant are squares and not rectangles.
         """
 
         up = []
