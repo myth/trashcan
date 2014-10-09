@@ -116,25 +116,27 @@ class EggCarton(AbstractBoard):
         cols = self.check_cols()
         diags = self.check_diags()
 
-        concat = rows + cols + diags
-        total = 0
+        # Preemptive check to see if diagonals have too many eggs
+        for x in diags:
+            if x < 0:
+                return 0
+        
         # Max potential horiz and vertical board check values
-        maximum = len(self.matrix) * self.K * 2
-        print maximum
-        # Max total list sum for right and left diags
-        maximum += ((len(self.matrix) * 2 - 1) - ((self.K - 1) * 2)) * 2
-        print maximum
+        maximum = self.M * self.K
+
+        # Concat the rows and cols to simplify things
+        concat = rows + cols
 
         # If illegal state, return 0, else add up to see how far away we are from
         # the optimal state, total = 0, which means it is not possible to add more eggs
         # in either row, col or diag.
+        total = 0
         for x in concat:
             if x < 0:
                 return 0
             total += x
 
-        print total
-
+        # If we're at maximum eggs, return that shining numero uno
         if total == 0:
             return 1
 
