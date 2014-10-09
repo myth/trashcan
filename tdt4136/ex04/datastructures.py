@@ -38,11 +38,6 @@ class AbstractBoard(object):
 
         return [[self.matrix[y][x] for y in xrange(self.M)] for x in xrange(self.N)]
 
-    def get_diagonals(self):
-        """
-        Returns two lists of diagonals, the upward and the downward
-        """
-
     def get_diags(self):
         """
         Returns two lists of diagonals in the matrix. Right-updward and Right-downward.
