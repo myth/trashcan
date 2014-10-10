@@ -126,7 +126,15 @@ class EggCarton(AbstractBoard):
         # If illegal state, return 0, else add up to see how far away we are from
         # the optimal state, total = 0, which means it is not possible to add more eggs
         # in either row, col or diag.
-        available_slots = abs(sum(concat))
+        available_slots = 0
+        overflow = 0
+        for x in concat:
+            if x < 0:
+                overflow += x
+            else:
+                available_slots += x
+
+        available_slots = available_slots + abs(overflow)
 
         # If we're at maximum eggs, return that shining numero uno
         if available_slots == 0:
