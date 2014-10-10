@@ -3,6 +3,7 @@
 This module contains the classes data representation
 """
 import logging
+from random import shuffle
 
 class AbstractBoard(object):
     """
@@ -152,6 +153,17 @@ class EggCarton(AbstractBoard):
 
         # If o creeps below zero, just return zero, else the real deal
         return o if o >= 0 else 0
+
+    def create_random_board(self):
+        """
+        This method inserts the maximum allowed eggs onto the board
+        and shuffles the rows.
+        """
+
+        for row in self.matrix:
+            for i in xrange(self.K):
+                row[i] = 1
+            shuffle(row)
 
     def __str__(self):
         return repr(self.matrix) + '\n' + \

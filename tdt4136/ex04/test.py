@@ -23,3 +23,7 @@ e.matrix = [
 ]
 
 print e
+
+e.create_random_board()
+
+print e
