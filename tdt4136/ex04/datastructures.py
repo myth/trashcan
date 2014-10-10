@@ -145,7 +145,7 @@ class EggCarton(AbstractBoard):
         """
 
         for row in self.matrix:
-            for i in xrange(self.K):
+            for i in xrange(self.K - 1):
                 row[i] = 1
             shuffle(row)
 
