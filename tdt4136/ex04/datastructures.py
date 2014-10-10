@@ -117,18 +117,6 @@ class EggCarton(AbstractBoard):
         cols = self.check_cols()
         diags = self.check_diags()
         
-        # TODO:
-
-        # The actual value this method returns needs to be modified to give roughly
-        # the same score for missing and too many eggs in a row, col or diag.
-        # Additionally, if the overall state is invalid, it cannot be set as a
-        # solution. Need to give this some more thought.
-
-        # Preemptive check to see if diagonals have too many eggs
-        for x in diags:
-            if x < 0:
-                return 0
-        
         # Max potential horiz and vertical board check values
         maximum = self.M * self.K
 
@@ -138,11 +126,7 @@ class EggCarton(AbstractBoard):
         # If illegal state, return 0, else add up to see how far away we are from
         # the optimal state, total = 0, which means it is not possible to add more eggs
         # in either row, col or diag.
-        available_slots = 0
-        for x in concat:
-            if x < 0:
-                return 0
-            available_slots += x
+        available_slots = abs(sum(concat))
 
         # If we're at maximum eggs, return that shining numero uno
         if available_slots == 0:
