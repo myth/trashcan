@@ -149,7 +149,7 @@ class EggCarton(AbstractBoard):
 
         # Add some random eggs in there
         for row in self.matrix:
-            for i in xrange(self.K - 1):
+            for i in xrange(self.K):
                 row[i] = 1
             shuffle(row)
 
