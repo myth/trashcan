@@ -143,7 +143,11 @@ class EggCarton(AbstractBoard):
         This method inserts the maximum allowed eggs onto the board
         and shuffles the rows.
         """
+        
+        # Create a clean baord
+        self.create_matrix(self.M, self.N)
 
+        # Add some random eggs in there
         for row in self.matrix:
             for i in xrange(self.K - 1):
                 row[i] = 1
