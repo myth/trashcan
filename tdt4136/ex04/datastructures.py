@@ -115,6 +115,13 @@ class EggCarton(AbstractBoard):
         rows = self.check_rows()
         cols = self.check_cols()
         diags = self.check_diags()
+        
+        # TODO:
+
+        # The actual value this method returns needs to be modified to give roughly
+        # the same score for missing and too many eggs in a row, col or diag.
+        # Additionally, if the overall state is invalid, it cannot be set as a
+        # solution. Need to give this some more thought.
 
         # Preemptive check to see if diagonals have too many eggs
         for x in diags:
@@ -140,8 +147,10 @@ class EggCarton(AbstractBoard):
         if available_slots == 0:
             return 1
 
+        # Define the o value. Need to double the max value to account for overlap
         o = 1.0 - (float(available_slots) / float(maximum * 2))
 
+        # If o creeps below zero, just return zero, else the real deal
         return o if o >= 0 else 0
 
     def __str__(self):
