@@ -27,3 +27,7 @@ print e
 e.create_random_board()
 
 print e
+for i in e.matrix:
+    print i
+
+
