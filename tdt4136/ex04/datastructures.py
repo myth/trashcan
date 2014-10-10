@@ -123,9 +123,8 @@ class EggCarton(AbstractBoard):
         # Concat the rows and cols to simplify things
         concat = rows + cols
 
-        # If illegal state, return 0, else add up to see how far away we are from
-        # the optimal state, total = 0, which means it is not possible to add more eggs
-        # in either row, col or diag.
+        # Check axes with available slots. Also check axes that overflow
+        # Sum up to a total value.
         available_slots = 0
         overflow = 0
         for x in concat:
@@ -136,12 +135,22 @@ class EggCarton(AbstractBoard):
 
         available_slots = available_slots + abs(overflow)
 
+        # Check for overflow in diagonals
+        diag_overflow = 0
+        for x in diags:
+            if x < 0:
+                diag_overflow += x
+
         # If we're at maximum eggs, return that shining numero uno
-        if available_slots == 0:
+        if available_slots == 0 and diag_overflow == 0:
             return 1
 
         # Define the o value. Need to double the max value to account for overlap
         o = 1.0 - (float(available_slots) / float(maximum * 2))
+
+        # Penalize if there are diagonal overflows
+        if diag_overflow != 0:
+            o = o * (1 / abs(diag_overflow))
 
         # If o creeps below zero, just return zero, else the real deal
         return o if o >= 0 else 0
