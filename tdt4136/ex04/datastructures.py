@@ -180,22 +180,27 @@ class EggCarton(AbstractBoard):
         Returns a list of n neighbor boards
         """
 
+        # Create empty neighbor list
         neighbors = []
 
+        # Yield a range of 0,n-1
         for x in xrange(0, n):
+            # Deepcopy the current solution
             neighbor = deepcopy(self)
 
+            # Get lists of the rows and cols
             rows = neighbor.check_rows()
             cols = neighbor.check_cols()
 
+            # Shuffle 
             for x in xrange(0, len(rows)):
-                if rows[x] != 0:
+                if rows[x] < 0:
                     shuffle(neighbor.matrix[x])
 
             for x in xrange(0, len(cols)):
-                if cols[x] != 0:
-                    temp = neighbor.get_cols()
-                    shuffle(temp)
+                if cols[x] < 0:
+                    temp = neighbor.get_rows()
+                    shuffle(temp[x])
                     for y in xrange(0, len(temp)):
                         neighbor.matrix[y][x] = temp[x][y]
 
