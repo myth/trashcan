@@ -46,28 +46,30 @@ class AbstractBoard(object):
         relevant are squares and not rectangles.
         """
 
-        up = []
-        down = []
+        left_up = []
+        right_up = []
 
         # For the number of adjacent diagonals in a matrix of size self.M * self.M
         for p in xrange(0, self.M * 2 - 1):
 
-            diag_up = []
-            diag_down = []
+            diag_left = []
+            diag_right = []
 
             # Dynamic boundries to prevent indexes off the matrix
-            for q in xrange(max(0, p - self.M + 1), min(p, self.M - 1)):
+            for q in xrange(max(0, p - self.M + 1), min(p, self.M - 1) + 1):
                 
-                # Add the right-upward diags
-                diag_up.append(self.matrix[p - q][q])
-                # Add the right-downward diags
-                diag_down.append(self.matrix[p - q][self.M - 1 - q])
+                # Add the right-up diags
+                diag_right.append(self.matrix[p - q][q])
+                # Add the left-up diags
+                diag_left.append(self.matrix[p - q][self.M - 1 - q])
 
             # Add them to their respective lists
-            up.append(diag_up)
-            down.append(diag_down)
+            if diag_left:
+                left_up.append(diag_left)
+            if diag_right:
+                right_up.append(diag_right)
 
-        return up, down
+        return left_up, right_up
 
 
 class EggCarton(AbstractBoard):
@@ -102,8 +104,8 @@ class EggCarton(AbstractBoard):
 
         # Remove diagonals of size less than K for simplicity,
         # and add diagonal sum to output.
-        output = [sum(x) for x in up if len(x) >= self.K]
-        output.extend([sum(x) for x in down if len(x) >= self.K])
+        output = [self.K - sum(x) for x in up if len(x) >= self.K]
+        output.extend([self.K - sum(x) for x in down if len(x) >= self.K])
 
         return output
 
@@ -143,17 +145,19 @@ class EggCarton(AbstractBoard):
 
         # If we're at maximum eggs, return that shining numero uno
         if available_slots == 0 and diag_overflow == 0:
-            return 1
+            return 1.0
 
         # Define the o value. Need to double the max value to account for overlap
         o = 1.0 - (float(available_slots) / float(maximum * 2))
 
         # Penalize if there are diagonal overflows
         if diag_overflow != 0:
-            o = o * (1 / abs(diag_overflow))
+            if abs(diag_overflow) == 1:
+                o = o - 0.05
+            else:
+                o = o * (1.0 / abs(diag_overflow) * 0.67)
 
-        # If o creeps below zero, just return zero, else the real deal
-        return o if o >= 0 else 0
+        return o
 
     def create_random_board(self):
         """
@@ -170,12 +174,15 @@ class EggCarton(AbstractBoard):
                 row[i] = 1
             shuffle(row)
 
+    def pretty_matrix(self):
+        return '\n'.join([repr(row) for row in self.matrix])
+
     def __str__(self):
-        return repr(self.matrix) + '\n' + \
+        return '### Board\n' + self.pretty_matrix() + '\n\n' + \
             repr(self.check_rows()) + '\n' + \
             repr(self.check_cols()) + '\n' + \
             repr(self.check_diags()) + '\n' + \
-            'Objective value: %f' % self.objective()
+            'Objective value: %f' % self.objective() + '\n'
         
 
 class PegBoard(AbstractBoard):
