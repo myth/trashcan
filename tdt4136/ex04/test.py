@@ -23,6 +23,9 @@ while True:
             temp_max = n.objective()
             temp = e
 
+    if temp is e:
+        e.create_random_board()
+
     if e.objective() == 1:
         break
 
