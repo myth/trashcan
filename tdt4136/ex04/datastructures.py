@@ -4,6 +4,7 @@ This module contains the classes data representation
 """
 import logging
 from random import shuffle
+from copy import deepcopy
 
 class AbstractBoard(object):
     """
@@ -173,6 +174,34 @@ class EggCarton(AbstractBoard):
             for i in xrange(self.K):
                 row[i] = 1
             shuffle(row)
+
+    def create_neighbors(self, n):
+        """
+        Returns a list of n neighbor boards
+        """
+
+        neighbors = []
+
+        for x in xrange(0, n):
+            neighbor = deepcopy(self)
+
+            rows = neighbor.check_rows()
+            cols = neighbor.check_cols()
+
+            for x in xrange(0, len(rows)):
+                if rows[x] != 0:
+                    shuffle(neighbor.matrix[x])
+
+            for x in xrange(0, len(cols)):
+                if cols[x] != 0:
+                    temp = neighbor.get_cols()
+                    shuffle(temp)
+                    for y in xrange(0, len(temp)):
+                        neighbor.matrix[y][x] = temp[x][y]
+
+            neighbors.append(neighbor)
+
+        return neighbors
 
     def pretty_matrix(self):
         return '\n'.join([repr(row) for row in self.matrix])
