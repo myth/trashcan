@@ -6,29 +6,34 @@ import time
 from datastructures import *
 
 e = EggCarton(5, 5, 2)
+e.create_random_board()
 
 t = time.time()
 
-e.create_random_board()
-
 print e
+
+temp_max = 0
+temp = e
 
 while True:
-    neighbors = e.create_neighbors(4)
+    
+    current = temp
 
-    temp_max = e.objective()
-    temp = e
+    neighbors = temp.create_neighbors(4)
+
     for n in neighbors:
-        if n.objective() > temp_max:
+        if n.objective() >= temp_max:
+            temp = n
             temp_max = n.objective()
-            temp = e
 
-    if temp is e:
+    if temp is current:
         e.create_random_board()
+        print "Created random board"
+    else:
+        print "Used neighbor"
 
-    if e.objective() == 1:
+    if temp.objective() == 1.0:
+        print temp
         break
-
-print e
 
 print "Took %f seconds" % (time.time() - t)

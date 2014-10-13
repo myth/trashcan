@@ -3,7 +3,7 @@
 This module contains the classes data representation
 """
 import logging
-from random import shuffle
+from random import shuffle, randint
 from copy import deepcopy
 
 class AbstractBoard(object):
@@ -154,7 +154,7 @@ class EggCarton(AbstractBoard):
         # Penalize if there are diagonal overflows
         if diag_overflow != 0:
             if abs(diag_overflow) == 1:
-                o = o - 0.05
+                o = o - 0.1
             else:
                 o = o * (1.0 / abs(diag_overflow) * 0.67)
 
@@ -185,26 +185,58 @@ class EggCarton(AbstractBoard):
 
         # Yield a range of 0,n-1
         for x in xrange(0, n):
+
+            # If we have reached the desired neighbor number, exit the loop
+            if len(neighbors) == n:
+                break
+
             # Deepcopy the current solution
             neighbor = deepcopy(self)
 
-            # Get lists of the rows and cols
-            rows = neighbor.check_rows()
-            cols = neighbor.check_cols()
+            rows = neighbor.get_rows()
+            cols = neighbor.get_cols()
 
-            # Shuffle 
-            for x in xrange(0, len(rows)):
-                if rows[x] < 0:
-                    shuffle(neighbor.matrix[x])
+            # Flag to check if there has been any shuffles
+            modifications = False
 
-            for x in xrange(0, len(cols)):
-                if cols[x] < 0:
-                    temp = neighbor.get_rows()
-                    shuffle(temp[x])
-                    for y in xrange(0, len(temp)):
-                        neighbor.matrix[y][x] = temp[x][y]
+            # Iterate through, and potentially shuffle rows
+            for i, row in enumerate(rows):
+                if not modifications:
+                    if sum(row) > 2:
+                        # If we have overflow in a row, randomly shuffle a column that affects the row
+                        temp_indexes = []
+                        for j, val in enumerate(row):
+                            if val == 1:
+                                temp_indexes.append(j)
+                        shuffle_index = randint(0, len(temp_indexes) - 1)
+                        shuffle(cols[shuffle_index])
+                        for y, val in enumerate(cols[shuffle_index]):
+                            neighbor.matrix[y][shuffle_index] = val
 
-            neighbors.append(neighbor)
+                        neighbors.append(neighbor)
+                        modifications = True
+                        break
+
+            # If there has not been modifications to fix row overflow, check column overflow
+            if not modifications:
+                for i, col in enumerate(cols):
+                    if sum(col) > 2:
+                        temp_indexes = []
+                        for j, val in enumerate(col):
+                            if val == 1:
+                                temp_indexes.append(j)
+                        shuffle_index = randint(0, len(temp_indexes) - 1)
+                        shuffle(neighbor.matrix[shuffle_index])
+                        neighbors.append(neighbor)
+                        modifications = True
+                        break
+            
+            # If there has not been any modifications to the current neighbor, meaning
+            # that we only have overflows in diagonals, just return add a random board
+            if not modifications:
+                neighbor.create_random_board()
+                neighbors.append(neighbor)
+                modifications = True
 
         return neighbors
 
