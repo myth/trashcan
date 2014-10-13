@@ -183,6 +183,8 @@ class EggCarton(AbstractBoard):
         # Create empty neighbor list
         neighbors = []
 
+        neighbor = deepcopy(self)
+
         # Yield a range of 0,n-1
         for x in xrange(0, n):
 
@@ -190,8 +192,8 @@ class EggCarton(AbstractBoard):
             if len(neighbors) == n:
                 break
 
-            # Deepcopy the current solution
-            neighbor = deepcopy(self)
+            # Deepcopy the current neighbor
+            neighbor = deepcopy(neighbor)
 
             rows = neighbor.get_rows()
             cols = neighbor.get_cols()
@@ -200,22 +202,33 @@ class EggCarton(AbstractBoard):
             modifications = False
 
             # Iterate through, and potentially shuffle rows
+            row_overflow = []
+            row_underflow = []
             for i, row in enumerate(rows):
-                if not modifications:
-                    if sum(row) > 2:
-                        # If we have overflow in a row, randomly shuffle a column that affects the row
-                        temp_indexes = []
-                        for j, val in enumerate(row):
-                            if val == 1:
-                                temp_indexes.append(j)
-                        shuffle_index = randint(0, len(temp_indexes) - 1)
-                        shuffle(cols[shuffle_index])
-                        for y, val in enumerate(cols[shuffle_index]):
-                            neighbor.matrix[y][shuffle_index] = val
-
-                        neighbors.append(neighbor)
-                        modifications = True
-                        break
+                if sum(row) > self.K:
+                    # If we have overflow in a row, extract coords that affect it
+                    indexes = []
+                    for j, val in enumerate(row):
+                        if val == 1:
+                            indexes.append(j)
+                    index = randint(0, len(indexes) - 1)
+                    row_overflow.append((i, index))
+                elif sum(row) < self.K:
+                    indexes = []
+                    for j, val in enumerate(row):
+                        if val == 0:
+                            indexes.append(j)
+                    index = randint(0, len(indexes) - 1)
+                    row_underflow.append((i, index))
+            
+            # Swap overflows with underflows
+            if row_overflow:
+                y, x = row_overflow[randint(0, len(row_overflow) - 1)]
+                dy, dx = row_underflow[randint(0, len(row_underflow) - 1)]
+                neighbor.matrix[y][x] = 0
+                neighbor.matrix[dy][dx] = 1
+                modifications = True
+                neighbors.append(neighbor)
 
             # If there has not been modifications to fix row overflow, check column overflow
             if not modifications:

@@ -68,12 +68,7 @@ class Main(Frame):
         Dynamically create the boards submenu
         :param menu: Takes in an instance of a top level menu element
         """
-        files = [f for f in os.listdir('./boards/') if '.txt' in os.path.basename(f)]
-        files = sorted(files)
-        for f in files:
-            fullpath = os.path.join(os.getcwd(), 'boards', f)
-            menu.add_command(label=os.path.basename(f),
-                             command=lambda fp=fullpath: self.createmap(f=fp))
+        print "Tihi"
 
     def draw_markers(self, nodes, icon):
         """
