@@ -9,24 +9,22 @@ from random import random, randint
 def sa(board):
 
     temp = 30*1000
-    f_target = 1
-
-    current_f = board.objective()
+    f_target = 1.0
+    start = board
+    current_f = start.objective()
+    pmax = start
 
     while temp > 0:
+        print "this is temp: ", temp
         t = time.time()
         if current_f >= f_target:
             return current_f
 
         else:
-            nabo = []
-            for x in xrange(0, 4):
-                b = EggCarton(5, 5, 2)
-                nabo.append(b)
+            nabo = start.create_neighbors(4)
 
-            pmax= 0
             for x in nabo:
-                if x.objective() > pmax:
+                if x.objective() > pmax.objective():
                     pmax = x
 
             q = (pmax.objective()-current_f)/current_f
@@ -35,10 +33,15 @@ def sa(board):
             x = random()
 
             if x > p:
-                current_f = pmax
+                current_f = pmax.objective()
 
             else:
-                current_f = nabo[randint(0, 4)]
+                current_f = nabo[randint(0, 3)]
+                current_f = current_f.objective()
 
+            temp -= time.time() - t
 
-            temp = time.time() - t
+egg = EggCarton(5, 5, 2)
+egg.create_random_board()
+
+sa(egg)
