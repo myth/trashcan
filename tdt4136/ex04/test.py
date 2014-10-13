@@ -5,7 +5,7 @@ import time
 
 from datastructures import *
 
-e = EggCarton(6, 6, 2)
+e = EggCarton(10, 10, 3)
 e.create_random_board()
 
 t = time.time()
@@ -17,7 +17,7 @@ temp = e
 
 while True:
 
-    neighbors = temp.create_neighbors(4)
+    neighbors = temp.create_neighbors(6)
     current = temp
 
     for n in neighbors:

@@ -72,6 +72,32 @@ class AbstractBoard(object):
 
         return left_up, right_up
 
+    def get_diag_coords(self):
+        """
+        Helper function to get actual matrix coordinates so one can map
+        the get_diags function to actual coordinates.
+        """
+
+        left_up = []
+        right_up = []
+
+        for p in xrange(0, self.M * 2 - 1):
+            diag_left = []
+            diag_right = []
+
+            # Dynamic boundaries
+            for q in xrange(max(0, p - self.M + 1), min(p, self.M - 1) + 1):
+                diag_right.append((p - q, q))
+                diag_left.append((p - q, self.M - 1 - q))
+
+            # Add to respective lists
+            if diag_left:
+                left_up.append(diag_left)
+            if diag_right:
+                right_up.append(diag_right)
+
+        return left_up, right_up
+
 
 class EggCarton(AbstractBoard):
     """
@@ -197,6 +223,8 @@ class EggCarton(AbstractBoard):
 
             rows = neighbor.get_rows()
             cols = neighbor.get_cols()
+            left_up, right_up = neighbor.get_diags()
+            coords_left, coords_right = neighbor.get_diag_coords()
 
             # Flag to check if there has been any shuffles
             modifications = False
@@ -234,6 +262,7 @@ class EggCarton(AbstractBoard):
             col_overflow = []
             col_underflow = []
             if not modifications:
+                #print "No row modification"
                 for i, col in enumerate(cols):
                     if sum(col) > self.K:
                         indexes = []
@@ -260,11 +289,17 @@ class EggCarton(AbstractBoard):
                 neighbors.append(neighbor)
             
             # If there has not been any modifications to the current neighbor, meaning
-            # that we only have overflows in diagonals, just return a random board
+            # that there are overflows in diagonals only
             if not modifications:
-                neighbor.create_random_board()
+                a = randint(0, 1)
+                if a:
+                    shuffle(neighbor.matrix[randint(0, self.M - 1)])
+                else:
+                    b = randint(0, len(cols) - 1)
+                    shuffle(cols[b])
+                    for i, val in enumerate(cols[b]):
+                        neighbor.matrix[i][b] = val
                 neighbors.append(neighbor)
-                modifications = True
 
         return neighbors
 
