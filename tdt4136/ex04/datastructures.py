@@ -220,9 +220,9 @@ class EggCarton(AbstractBoard):
                             indexes.append(j)
                     index = randint(0, len(indexes) - 1)
                     row_underflow.append((i, index))
-            
+
             # Swap overflows with underflows
-            if row_overflow:
+            if row_overflow and row_underflow:
                 y, x = row_overflow[randint(0, len(row_overflow) - 1)]
                 dy, dx = row_underflow[randint(0, len(row_underflow) - 1)]
                 neighbor.matrix[y][x] = 0
@@ -231,21 +231,36 @@ class EggCarton(AbstractBoard):
                 neighbors.append(neighbor)
 
             # If there has not been modifications to fix row overflow, check column overflow
+            col_overflow = []
+            col_underflow = []
             if not modifications:
                 for i, col in enumerate(cols):
-                    if sum(col) > 2:
-                        temp_indexes = []
+                    if sum(col) > self.K:
+                        indexes = []
                         for j, val in enumerate(col):
                             if val == 1:
-                                temp_indexes.append(j)
-                        shuffle_index = randint(0, len(temp_indexes) - 1)
-                        shuffle(neighbor.matrix[shuffle_index])
-                        neighbors.append(neighbor)
-                        modifications = True
-                        break
+                                indexes.append(j)
+                        index = randint(0, len(indexes) - 1)
+                        col_overflow.append((index, i))
+                    elif sum(col) < self.K:
+                        indexes = []
+                        for j, val in enumerate(col):
+                            if val == 0:
+                                indexes.append(j)
+                        index = randint(0, len(indexes) - 1)
+                        col_underflow.append((index, i))
+
+            # Swap overflows with underflows
+            if col_overflow and col_underflow:
+                y, x = col_overflow[randint(0, len(col_overflow) - 1)]
+                dy, dx = col_underflow[randint(0, len(col_underflow) - 1)]
+                neighbor.matrix[y][x] = 0
+                neighbor.matrix[dy][dx] = 1
+                modifications = True
+                neighbors.append(neighbor)
             
             # If there has not been any modifications to the current neighbor, meaning
-            # that we only have overflows in diagonals, just return add a random board
+            # that we only have overflows in diagonals, just return a random board
             if not modifications:
                 neighbor.create_random_board()
                 neighbors.append(neighbor)

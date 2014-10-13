@@ -5,7 +5,7 @@ import time
 
 from datastructures import *
 
-e = EggCarton(10, 10, 3)
+e = EggCarton(6, 6, 2)
 e.create_random_board()
 
 t = time.time()
