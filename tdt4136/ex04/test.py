@@ -27,6 +27,7 @@ while True:
     
     if temp is not current:
         print "Found better neighbor... %f" % temp_max
+        print temp
         
 
     if temp.objective() == 1.0:
