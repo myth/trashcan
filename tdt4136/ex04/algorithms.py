@@ -8,11 +8,12 @@ from random import random, randint
 
 def sa(board):
 
-    temp = 8192
+    temp = 4096
     f_target = 1.0
     start = board
     current_f = start.objective()
     pmax = start
+    best = current_f
 
     while temp > 0:
         #print "this is temp: ", temp
@@ -22,34 +23,43 @@ def sa(board):
             return current_f
 
         else:
-            nabo = start.create_neighbors(6)
+            nabo = pmax.create_neighbors(6)
 
             for y in nabo:
                 if y.objective() > pmax.objective():
                     pmax = y
 
-            q = ((pmax.objective() - current_f)/current_f)
-            #print "Dette er q: ", q
+            try:
+
+                q = ((pmax.objective() - current_f)/current_f)
+
+            except ZeroDivisionError:
+                q = pmax.objective()
+                print current_f
 
             p = min([1, exp((q*-1)/temp)])
-            #print "Dette er p: ", p
 
             x = random()
-            #print "Dette er x: ", x
 
             if x > p:
                 current_f = pmax.objective()
-                #print "pmax"
+                if current_f > best:
+                    best = current_f
+                    print "fant bedre f", best
 
             else:
                 current_f = nabo[randint(0, 5)]
                 current_f = current_f.objective()
-               # print "Random nabo"
+                if current_f > best:
+                    best = current_f
+                    print "fant bedre f", best
 
-            temp = temp - 1
-            #print "this is current_f", current_f
+
+        temp = temp - 1
 
 
-egg = EggCarton(6, 6, 2)
+    return best
+
+egg = EggCarton(8, 8, 1)
 egg.create_random_board()
 print sa(egg)
