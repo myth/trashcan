@@ -13,14 +13,13 @@ def sa(board):
     start = board
     current_f = start.objective()
     pmax = start
-    best = current_f
+    best = pmax
 
     while temp > 0:
         #print "this is temp: ", temp
         t = time.time()
         if current_f >= f_target:
-            print pmax
-            return current_f
+            return pmax
 
         else:
             nabo = pmax.create_neighbors(6)
@@ -35,7 +34,6 @@ def sa(board):
 
             except ZeroDivisionError:
                 q = pmax.objective()
-                print current_f
 
             p = min([1, exp((q*-1)/temp)])
 
@@ -43,23 +41,17 @@ def sa(board):
 
             if x > p:
                 current_f = pmax.objective()
-                if current_f > best:
-                    best = current_f
-                    print "fant bedre f", best
+                if current_f > best.objective():
+                    best = pmax
 
             else:
                 current_f = nabo[randint(0, 5)]
-                current_f = current_f.objective()
-                if current_f > best:
+                if current_f > best.objective():
                     best = current_f
-                    print "fant bedre f", best
+                    current_f = current_f.objective()
 
 
         temp = temp - 1
 
 
     return best
-
-egg = EggCarton(8, 8, 1)
-egg.create_random_board()
-print sa(egg)
