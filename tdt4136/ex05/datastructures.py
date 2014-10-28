@@ -6,6 +6,8 @@ This module contains the classes data representation
 import logging
 import copy
 import itertools
+from tools import *
+import random
 
 class CSP:
     def __init__(self):
@@ -78,7 +80,23 @@ class CSP:
         in 'assignment' that have not yet been decided, i.e. whose list
         of legal values has a length greater than one.
         """
-        return argmin_random_tie([v for v in self.vars if v not in assignment], lambda var: num_legal_values(csp, var, assignment))
+
+        lists_by_length = [(len(val), key) for key, val in assignment.domains.items() if len(val) > 1]
+        lists_by_length.sort()
+
+        temp = []
+        minimum = max(lists_by_length)[0]
+        for x in lists_by_length:
+
+            if x[0] == minimum:
+                temp.append(x[1])
+            elif x[0] < minimum:
+                temp = []
+                temp.append(x[1])
+
+        return random.choice(temp)
+
+
 
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
@@ -106,10 +124,15 @@ class CSP:
         legal values in 'assignment'.
         """
         revised = False
-        for x in self.domains[i][:]:
-            if every(lambda y: not self.constraints(i, x, j, y), assignment.domains[j]):
-                self.domains[i] = assignment.domains[i] - self.domains[x]
-                revised = True
+        for x in i:
+            print x
 
-        return revised
+
+
+
+        #     if every(lambda y: not self.constraints(i, x, j, y), assignment.domains[j]):
+        #         self.domains[i] = assignment.domains[i] - self.domains[x]
+        #         revised = True
+        #
+        # return revised
 
