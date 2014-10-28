@@ -51,5 +51,18 @@ def backtrack(board, assignment):
     assignments and inferences that took place in previous
     iterations of the loop.
     """
-    # TODO: IMPLEMENT THIS
-    pass
+
+    def check_complete(assignment):
+        for key, value in assignment.items():
+            if len(value) != 1:
+                return False
+        return True
+
+    if check_complete(assignment):
+        return assignment
+
+    var = board.select_unassigned_variable(board)
+    for val in board.order_domain_values(var, copy.deepcopy(assignment), board)
+        if val is consistent with assignment:
+            assignment[var] = val
+            inferences = 
