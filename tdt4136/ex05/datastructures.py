@@ -21,6 +21,10 @@ class CSP:
         # the variable pair (i, j)
         self.constraints = {}
 
+        # Stats
+        self.failed = 0
+        self.total = 0
+
     def add_variable(self, name, domain):
         """Add a new variable to the CSP. 'name' is the variable name
         and 'domain' is a list of the legal values for the variable.
@@ -81,20 +85,7 @@ class CSP:
         of legal values has a length greater than one.
         """
 
-        temp = []
-        minimum = None
-        for var, l in assignment.items():
-            if minimum is None:
-                minimum = len(l)
-            if len(l) == minimum:
-                temp.append(var)
-            elif len(l) < minimum:
-                temp = []
-                temp.append(var)
-
-        return random.choice(temp)
-
-
+        return min(filter(lambda x: len(x[1]) > 1, assignment.items()), key=lambda y: len(y[0]))[0]
 
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
@@ -102,16 +93,15 @@ class CSP:
         the lists of legal values for each undecided variable. 'queue'
         is the initial queue of arcs that should be visited.
         """
+        
         while queue:
-            (i, j) = queue.pop(0)
+            i, j = queue.pop(0)
             if self.revise(assignment, i, j):
-                if not self.domains[i]:
-                    return False
-                arcs = self.get_all_neighboring_arcs(i)
-                for k in arcs:
-                    if k != i:
-                        queue.append(k)
-        return True
+                if not assignment[i]: return False
+                map(lambda x: queue.append((x[0], i)) if x[0] != i and x[0] != j else None,
+                    self.get_all_neighboring_arcs(i))
+
+        return True 
 
     def revise(self, assignment, i, j):
         """The function 'Revise' from the pseudocode in the textbook.
@@ -122,29 +112,14 @@ class CSP:
         between i and j, the value should be deleted from i's list of
         legal values in 'assignment'.
         """
-        di = assignment[i]
-        dj = assignment[j]
 
-        for xi in di:
-            if not self.satisfactory(i, xi, j, dj):
-                assignment[i].remove(xi)
-                return True
-        return False
-
-    def satisfactory(self, i, xi, j, dj):
-        for xj in dj:
-            if (xi, xj) in self.constraints[i][j]:
-                return True
-        return False
-
-
-
-        #     if every(lambda y: not self.constraints(i, x, j, y), assignment.domains[j]):
-        #         self.domains[i] = assignment.domains[i] - self.domains[x]
-        #         revised = True
-        #
-        # return revised
-
+        revised = False
+        for a in assignment[i]:
+            arcs = ((a, b) for b in assignment[j])
+            if not set(self.constraints[i][j]).intersection(arcs):
+                assignment[i].remove(a) # Removing x from the domain of Xi
+                revised = True
+        return revised
 
 
     def backtracking_search(self):
@@ -164,7 +139,7 @@ class CSP:
         # Call backtrack with the partial assignment 'assignment'
         return self.backtrack(assignment)
 
-    def backtrack(self, assignment, i=0):
+    def backtrack(self, assignment):
         """The function 'Backtrack' from the pseudocode in the
         textbook.
 
@@ -189,22 +164,24 @@ class CSP:
         iterations of the loop.
         """
 
-        if len(assignment) == len(self.domains):
-            print 'Iterations of backtrack: %d' % i
+        self.total += 1
+
+        remaining_domains = filter(lambda x: len(x) != 1, assignment.values())
+        if not len(remaining_domains):
+            print 'Failed backtracks: %d' % self.failed
+            print 'Total backtracks: %d' % self.total
             return assignment
         
-        if check_complete(assignment) is None:
-            return None
-
-        # Check if the length sum og assignment is equal to that of domains
-
         var = self.select_unassigned_variable(assignment)
+ 
+        for value in assignment[var]:
+            temp_copy = copy.deepcopy(assignment)
+            temp_copy[var] = value
+            if self.inference(temp_copy, self.get_all_arcs()):
+                result = self.backtrack(temp_copy)
+                if result:
+                    return result
 
-        for val in assignment[var]:
-            assignment = copy.deepcopy(assignment)
-            assignment[var] = val
-            inferences = self.inference(assignment, self.get_all_arcs())
-            if inferences:
-                return self.backtrack(assignment, i+1)
+        self.failed += 1
 
         return None

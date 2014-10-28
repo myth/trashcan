@@ -3,7 +3,6 @@
 import copy
 import itertools
 from datastructures import *
-from algorithms import *
 
 def create_map_coloring_csp():
     """Instantiate a CSP representing the map coloring problem from the
