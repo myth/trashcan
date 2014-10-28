@@ -81,7 +81,7 @@ class CSP:
         of legal values has a length greater than one.
         """
 
-        lists_by_length = [(len(val), key) for key, val in assignment.domains.items() if len(val) > 1]
+        lists_by_length = [(len(val), key) for key, val in assignment.items() if len(val) > 1]
         lists_by_length.sort()
 
         temp = []
@@ -123,12 +123,12 @@ class CSP:
         between i and j, the value should be deleted from i's list of
         legal values in 'assignment'.
         """
-        di = assignment.domains[i]
-        dj = assignment.domains[j]
+        di = assignment[i]
+        dj = assignment[j]
 
         for xi in di:
             if not self.satisfactory(i, xi, j, dj):
-                assignment.domains[i].remove(xi)
+                assignment[i].remove(xi)
                 return True
         return False
 
@@ -189,7 +189,10 @@ class CSP:
         assignments and inferences that took place in previous
         iterations of the loop.
         """
-        # TODO: IMPLEMENT THIS
-        pass
+        
+        # Check if the length sum og assignment is equal to that of domains
+        if sum(assignment, key=lambda x: len(x)) == len(self.domains):
+            return assignment
 
+        var = self.select_unassigned_variable(assignment)
 
