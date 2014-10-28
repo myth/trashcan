@@ -81,18 +81,16 @@ class CSP:
         of legal values has a length greater than one.
         """
 
-        lists_by_length = [(len(val), key) for key, val in assignment.items() if len(val) > 1]
-        lists_by_length.sort()
-
         temp = []
-        minimum = max(lists_by_length)[0]
-        for x in lists_by_length:
-
-            if x[0] == minimum:
-                temp.append(x[1])
-            elif x[0] < minimum:
+        minimum = None
+        for var, l in assignment.items():
+            if minimum is None:
+                minimum = len(l)
+            if len(l) == minimum:
+                temp.append(var)
+            elif len(l) < minimum:
                 temp = []
-                temp.append(x[1])
+                temp.append(var)
 
         return random.choice(temp)
 
@@ -105,13 +103,14 @@ class CSP:
         is the initial queue of arcs that should be visited.
         """
         while queue:
-            (i, j) = queue.pop()
-            if self.revise(self, assignment, i, j):
+            (i, j) = queue.pop(0)
+            if self.revise(assignment, i, j):
                 if not self.domains[i]:
                     return False
-                for k in self.get_all_neighboring_arcs(i):
+                arcs = self.get_all_neighboring_arcs(i)
+                for k in arcs:
                     if k != i:
-                        queue.add([k][i])
+                        queue.append(k)
         return True
 
     def revise(self, assignment, i, j):
@@ -165,7 +164,7 @@ class CSP:
         # Call backtrack with the partial assignment 'assignment'
         return self.backtrack(assignment)
 
-    def backtrack(self, assignment):
+    def backtrack(self, assignment, i=0):
         """The function 'Backtrack' from the pseudocode in the
         textbook.
 
@@ -189,10 +188,23 @@ class CSP:
         assignments and inferences that took place in previous
         iterations of the loop.
         """
-        
-        # Check if the length sum og assignment is equal to that of domains
-        if sum(assignment, key=lambda x: len(x)) == len(self.domains):
+
+        if len(assignment) == len(self.domains):
+            print 'Iterations of backtrack: %d' % i
             return assignment
+        
+        if check_complete(assignment) is None:
+            return None
+
+        # Check if the length sum og assignment is equal to that of domains
 
         var = self.select_unassigned_variable(assignment)
 
+        for val in assignment[var]:
+            assignment = copy.deepcopy(assignment)
+            assignment[var] = val
+            inferences = self.inference(assignment, self.get_all_arcs())
+            if inferences:
+                return self.backtrack(assignment, i+1)
+
+        return None
