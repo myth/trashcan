@@ -123,16 +123,19 @@ class CSP:
         between i and j, the value should be deleted from i's list of
         legal values in 'assignment'.
         """
-        revised = False
-        for x in i:
-            print x
+        di = assignment.domains[i]
+        dj = assignment.domains[j]
 
+        for xi in di:
+            if not(self.satisfactory(xi, dj)):
+                assignment.domains[i].remove(xi)
+                return True
+        return False
 
+    def satisfactory(self, xi, dj):
+        for xj in dj:
+            if self.constraints.__contains__(xi + '-' + xj):
+                return True
+        return False
 
-
-        #     if every(lambda y: not self.constraints(i, x, j, y), assignment.domains[j]):
-        #         self.domains[i] = assignment.domains[i] - self.domains[x]
-        #         revised = True
-        #
-        # return revised
 
