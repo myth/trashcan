@@ -127,14 +127,14 @@ class CSP:
         dj = assignment.domains[j]
 
         for xi in di:
-            if not(self.satisfactory(xi, dj)):
+            if not self.satisfactory(i, xi, j, dj):
                 assignment.domains[i].remove(xi)
                 return True
         return False
 
-    def satisfactory(self, xi, dj):
+    def satisfactory(self, i, xi, j, dj):
         for xj in dj:
-            if self.constraints.__contains__(xi + '-' + xj):
+            if (xi, xj) in self.constraints[i][j]:
                 return True
         return False
 
