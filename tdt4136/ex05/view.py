@@ -37,7 +37,7 @@ class Main(Frame):
         menubar = Menu(self.parent)
 
         self.parent.config(menu=menubar)
-        self.parent.title(u'Simulated Annealing')
+        self.parent.title(u'CSP Solver')
 
         self.canvas = Canvas(self, width=800, height=580)
         self.canvas.config(bg='white')
