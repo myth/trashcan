@@ -84,7 +84,8 @@ class CSP:
         in 'assignment' that have not yet been decided, i.e. whose list
         of legal values has a length greater than one.
         """
-
+        
+        # Fetch the x-y VAR with lowest domain length, but above 1 elements.
         return min(filter(lambda x: len(x[1]) > 1, assignment.items()), key=lambda y: len(y[0]))[0]
 
     def inference(self, assignment, queue):
@@ -94,10 +95,12 @@ class CSP:
         is the initial queue of arcs that should be visited.
         """
         
+        # For all elements in queue
         while queue:
-            i, j = queue.pop(0)
-            if self.revise(assignment, i, j):
-                if not assignment[i]: return False
+            i, j = queue.pop(0) 
+            if self.revise(assignment, i, j): # if revised
+                if not assignment[i]: return False # if domain empty, fail
+                # Append all permutations of neighboring arcs that are not I or J to i to the queue
                 map(lambda x: queue.append((x[0], i)) if x[0] != i and x[0] != j else None,
                     self.get_all_neighboring_arcs(i))
 
@@ -115,9 +118,10 @@ class CSP:
 
         revised = False
         for a in assignment[i]:
-            arcs = ((a, b) for b in assignment[j])
+            arcs = ((a, b) for b in assignment[j]) # Make tuple permutations for I-J
             if not set(self.constraints[i][j]).intersection(arcs):
-                assignment[i].remove(a) # Removing x from the domain of Xi
+                # If none of the arcs are in constraints
+                assignment[i].remove(a)
                 revised = True
         return revised
 
@@ -166,6 +170,7 @@ class CSP:
 
         self.total += 1
 
+        # Exit if all domains are of length 1
         remaining_domains = filter(lambda x: len(x) != 1, assignment.values())
         if not len(remaining_domains):
             print 'Failed backtracks: %d' % self.failed
@@ -174,11 +179,14 @@ class CSP:
         
         var = self.select_unassigned_variable(assignment)
  
+        # For each val in assignment[var], deepcopy, and run inference
         for value in assignment[var]:
             temp_copy = copy.deepcopy(assignment)
             temp_copy[var] = value
             if self.inference(temp_copy, self.get_all_arcs()):
+                # If inference yields true, backtrack
                 result = self.backtrack(temp_copy)
+                # If we have a backtrack result, return it
                 if result:
                     return result
 

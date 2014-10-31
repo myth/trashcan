@@ -3,8 +3,8 @@
 import logging
 import time
 from tools import *
+from csp import *
 
-from datastructures import *
 print 'Starting Easy'
 start_time = time.time()
 e = create_sudoku_csp("sudokus/easy.txt")
