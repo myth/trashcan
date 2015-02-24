@@ -62,6 +62,9 @@ public class Barber extends Thread {
 
 				this.gui.println("Barber " + this.pos + " has finished with customer.");
 
+				// Clear the chair
+				this.gui.emptyBarberChair(this.pos);
+
 				// Update the GUI to set barber to sleeping
 				this.gui.barberIsSleeping(this.pos);
 

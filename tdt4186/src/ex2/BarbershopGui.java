@@ -101,18 +101,18 @@ public class BarbershopGui extends JFrame implements Constants, Gui, ChangeListe
 	private void loadImages() {
 		MediaTracker tracker = new MediaTracker(this);
 		Toolkit tk = Toolkit.getDefaultToolkit();
-		wallsImage = loadImage(tk, "images/walls.gif", tracker);
-		floorImage = loadImage(tk, "images/floor.gif", tracker);
-		loungeChairImage = loadImage(tk, "images/loungechair.gif", tracker);
-		barberChairImage = loadImage(tk, "images/barberchair.gif", tracker);
-		barberImage = loadImage(tk, "images/barber.gif", tracker);
+		wallsImage = loadImage(tk, "resources/images/walls.gif", tracker);
+		floorImage = loadImage(tk, "resources/images/floor.gif", tracker);
+		loungeChairImage = loadImage(tk, "resources/images/loungechair.gif", tracker);
+		barberChairImage = loadImage(tk, "resources/images/barberchair.gif", tracker);
+		barberImage = loadImage(tk, "resources/images/barber.gif", tracker);
 		customerImages = new Image[NOF_CUSTOMER_LOOKS];
 		for(int i = 0; i < NOF_CUSTOMER_LOOKS; i++) {
-			customerImages[i] = loadImage(tk, "images/customer"+i+".gif", tracker);
+			customerImages[i] = loadImage(tk, "resources/images/customer"+i+".gif", tracker);
 		}
-		tableImage = loadImage(tk, "images/table.gif", tracker);
-		deskImage = loadImage(tk, "images/desk.gif", tracker);
-		sleepImage = loadImage(tk, "images/sleep.gif", tracker);
+		tableImage = loadImage(tk, "resources/images/table.gif", tracker);
+		deskImage = loadImage(tk, "resources/images/desk.gif", tracker);
+		sleepImage = loadImage(tk, "resources/images/sleep.gif", tracker);
 		try {
 			tracker.waitForID(0);
 	    } catch (InterruptedException ie) {}
