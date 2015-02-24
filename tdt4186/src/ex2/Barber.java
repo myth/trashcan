@@ -46,11 +46,13 @@ public class Barber extends Thread {
 			// Update GUI to set Barber to awake state
 			this.gui.barberIsAwake(this.pos);
 
+			// Print current state
 			this.gui.println("Barber " + this.pos + " is waiting for customer.");
 
 			// Try to fetch a customer from queue
 			Customer c = this.queue.get();
 
+			// Print current state
 			this.gui.println("Barber " + this.pos + " was notified of new customer.");
 
 			// Fill this barbers chair
@@ -60,6 +62,7 @@ public class Barber extends Thread {
 				// Set the sleep time for barber working
 				this.sleep(Globals.barberWork);
 
+				// Print current state
 				this.gui.println("Barber " + this.pos + " has finished with customer.");
 
 				// Clear the chair
