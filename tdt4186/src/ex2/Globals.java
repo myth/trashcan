@@ -1,4 +1,4 @@
-package no.overflow.opsys.p2;
+package ex2;
 
 /**
  * Class containing three globally available variables modified by the GUI

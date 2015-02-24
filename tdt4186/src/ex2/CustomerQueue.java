@@ -1,4 +1,4 @@
-package no.overflow.opsys.p2;
+package ex2;
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
@@ -11,6 +11,7 @@ public class CustomerQueue {
 	private Customer[] buffer;
 	private Gui gui;
 	private int head, tail;
+	private int customerCount;
 
 	/**
 	 * Creates a new customer queue.
@@ -19,77 +20,90 @@ public class CustomerQueue {
 	 */
     public CustomerQueue(int queueLength, Gui gui) {
 		this.gui = gui;
-		buffer = new Customer[queueLength + 1];
+		buffer = new Customer[queueLength];
 		head = 0;
 		tail = 0;
+		this.customerCount = 0;
 	}
 
-	public void add(Customer c) {
-		if (!isFull()) {
-			buffer[head++] = c;
-			if (head == buffer.length) head = 0;
+	/**
+	 * Adds a customer to the queue if there is room left.
+	 * Updates the GUI and notifies other threads.
+	 *
+	 * @param c	The customer object to be added
+	 */
+	public synchronized void add(Customer c) {
+		while (isFull()) {
+			try {
+				// Tell the doorman thread to wait until notified
+				wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		else throw new BufferOverflowException();
+		// Add the customer and increment  customerCount
+		buffer[head] = c;
+		customerCount++;
+
+		// Update the GUI
+		this.gui.fillLoungeChair(head, c);
+
+		// Increment head
+		head++;
+
+		// Reset head if it has reached end of buffer
+		if (head == buffer.length) head = 0;
+
+		// Notify other threads of state change
+		notifyAll();
 	}
 
-	public Customer get() {
-		if (isEmpty()) throw new BufferUnderflowException();
-		else {
-			Customer c = buffer[tail++];
-			if (tail == buffer.length) tail = 0;
-			return c;
+	/**
+	 * Retrieves a customer if queue is non-empty.
+	 * Updates GUI and notifies other threads.
+	 */
+	public synchronized Customer get() {
+		while (isEmpty()) {
+			try {
+				// Tell the thread to wait until notified
+				wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
+		// Cache the customer
+		Customer c = buffer[tail];
+
+		// Decrement customerCount
+		customerCount--;
+
+		// Update the GUI
+		this.gui.emptyLoungeChair(tail);
+
+		// Increment tail
+		tail++;
+
+		// If tail has reached end of buffer, reset.
+		if (tail == buffer.length) tail = 0;
+
+		// Notify other threads of state change
+		notifyAll();
+
+		// Return the customer
+		return c;
 	}
 
-	public boolean isEmpty() {
-		return head == tail;
+	/**
+	 * Checks if the queue is empty
+	 */
+	private boolean isEmpty() {
+		return (head == tail && customerCount == 0);
 	}
 
-	public boolean isFull() {
-		if (tail == 0) return head == buffer.length - 1;
-		return head == tail - 1;
-	}
-
-	public void printQueue() {
-		System.out.println("Head: " + head + " Tail: " + tail);
-		for (Customer c: buffer) {
-			if (c != null) System.out.println(c.getCustomerID());
-			else System.out.println("null");
-		}
-	}
-
-	public static void main(String[] args) {
-		CustomerQueue cq = new CustomerQueue(5, null);
-		System.out.println("Empty: " + cq.isEmpty());
-		cq.add(new Customer());
-		cq.add(new Customer());
-		cq.add(new Customer());
-		cq.add(new Customer());
-		cq.add(new Customer());
-		cq.printQueue();
-		System.out.println("Full: " + cq.isFull());
-		cq.get();
-		cq.get();
-		cq.get();
-		cq.get();
-		cq.get();
-		cq.printQueue();
-		System.out.println("Empty: " + cq.isEmpty());
-		cq.add(new Customer());
-		cq.printQueue();
-		cq.get();
-		cq.printQueue();
-		System.out.println("Empty: " + cq.isEmpty());
-		cq.add(new Customer());
-		cq.printQueue();
-		cq.add(new Customer());
-		cq.printQueue();
-		cq.add(new Customer());
-		cq.printQueue();
-		cq.add(new Customer());
-		cq.printQueue();
-		cq.add(new Customer());
-		cq.printQueue();
-		System.out.println("Full: " + cq.isFull());
+	/**
+	 * Checks if the queue is full
+	 */
+	private boolean isFull() {
+		return (head == tail && customerCount != 0);
 	}
 }

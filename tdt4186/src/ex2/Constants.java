@@ -1,4 +1,4 @@
-package no.overflow.opsys.p2;
+package ex2;
 
 /**
  * Constants used by the GUI.
