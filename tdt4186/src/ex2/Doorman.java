@@ -1,7 +1,5 @@
 package ex2;
 
-import java.nio.BufferOverflowException;
-
 /**
  * This class implements the doorman's part of the
  * Barbershop thread synchronization example.
