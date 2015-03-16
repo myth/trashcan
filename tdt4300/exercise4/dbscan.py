@@ -3,7 +3,7 @@
 import numpy as np
 from sys import argv
 
-EPS = float(argv[2])
+EPS = argv[2]
 MINPTS = 3
 
 POINTS = np.array([
