@@ -8,6 +8,8 @@ import java.io.*;
 public class Simulator implements Constants
 {
 
+	public static final boolean DEBUG = true;
+
 	public static final boolean DEFAULT_VALUES = true;
 
 	/** The queue of events to come */
@@ -85,8 +87,6 @@ public class Simulator implements Constants
 			if (clock < simulationLength) {
 				processEvent(event);
 			}
-
-			if (statistics.ioQueueLargestLength > io.getQueue().getQueueLength()) statistics.ioQueueLargestLength = io.getQueue().getQueueLength();
 
 			// Note that the processing of most events should lead to new
 			// events being added to the event queue!
@@ -229,9 +229,9 @@ public class Simulator implements Constants
 		if (DEFAULT_VALUES) {
 			memorySize = 2048L;
 			maxCpuTime = 500L;
-			avgIoTime = 225L;
-			simulationLength = 90000L;
-			avgArrivalInterval = 5000L;
+			avgIoTime = 125L;
+			simulationLength = 250000L;
+			avgArrivalInterval = 1000L;
 		} else {
 
 			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -269,6 +269,6 @@ public class Simulator implements Constants
 	}
 
 	public void debug(String device, String input) {
-		System.out.println("[" + clock + "][" + device + "] " + input);
+		if (DEBUG) System.out.println("[" + clock + "][" + device + "] " + input);
 	}
 }

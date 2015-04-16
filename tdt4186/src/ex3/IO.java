@@ -31,11 +31,12 @@ public class IO {
 
     public void addProcessToQueue(Process p) {
         p.setNofTimesInIoQueue(p.getNofTimesInIoQueue() + 1);
-        simulator.debug("IO", "Adding process " + p.getProcessId() + " to I/O queue (" + p.getNofTimesInIoQueue() + " times in I/O queue).");
         this.queue.insert(p);
+        simulator.debug("IO", "Adding process " + p.getProcessId() + " to I/O queue (" + p.getNofTimesInIoQueue() + " times in I/O queue).");
         statistics.nofProcessesPlacedInIoQueue++;
-        if (statistics.ioQueueLargestLength < queue.getQueueLength()) statistics.ioQueueLargestLength = queue.getQueueLength();
-        simulator.debug("IO][QUEUESIZE", "" + this.queue.getQueueLength());
+        if (queue.getQueueLength() > statistics.getIoQueueLargestLength()) {
+            statistics.setIoQueueLargestLength(queue.getQueueLength());
+        }
     }
 
     public boolean isWorking() {
@@ -53,11 +54,9 @@ public class IO {
 
         // Update stats
         activeJob.setTimeSpentWaitingForIo(activeJob.getTimeSpentWaitingForIo() + simulator.getClock() - activeJob.getTimeOfLastEvent());
-        activeJob.setTimeOfLastEvent(simulator.getClock());
-
         // Debug output
         simulator.debug("IO", "Process " + activeJob.getProcessId() + " loaded into IO. (Time waited in queue: " + (simulator.getClock() - activeJob.getTimeOfLastEvent()) + "ms)");
-
+        activeJob.setTimeOfLastEvent(simulator.getClock());
         // Update the GUI
         gui.setIoActive(activeJob);
 
@@ -79,17 +78,19 @@ public class IO {
         cpu.addProcessToQueue(activeJob);
 
         // If there are more things in CPU queue, load them and fire event
-        Process p = cpu.fetchProcess();
-        if (p != null) {
-            cpu.generateEvent(p);
-            p.setTimeOfLastEvent(simulator.getClock());
+        if (!cpu.isWorking()) {
+            Process p = cpu.fetchProcess();
+            if (p != null) {
+                cpu.generateEvent(p);
+                p.setTimeOfLastEvent(simulator.getClock());
+            }
         }
 
         // Update the current job stop event time
         activeJob.setTimeOfLastEvent(simulator.getClock());
 
         // Check if we have more stuff in ioQueue, if so, load it and fire next event.
-        p = executeNext();
+        Process p = executeNext();
         if (p != null) {
             simulator.fireEvent(Constants.END_IO, simulator.getClock() + avgIoTime);
             p.setTimeOfLastEvent(simulator.getClock());
@@ -167,8 +168,6 @@ public class IO {
         else simulator.debug("IO-TICK", "Active job: " + activeJob);
 
         if (!working) statistics.ioTimeSpentWaiting += timedelta;
-        if (queue.getQueueLength() > statistics.ioQueueLargestLength) {
-            statistics.ioQueueLargestLength = queue.getQueueLength();
-        }
+        else statistics.ioTimeSpentIn += timedelta;
     }
 }

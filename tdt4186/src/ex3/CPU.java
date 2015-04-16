@@ -32,8 +32,10 @@ public class CPU {
         queue.insert(p);
         p.setNofTimesInReadyQueue(p.getNofTimesInReadyQueue() + 1);
         statistics.nofProcessesPlacedInCpuQueue++;
-        if (statistics.cpuQueueLargestLength < queue.getQueueLength()) statistics.cpuQueueLargestLength = queue.getQueueLength();
-        simulator.debug("CPU][QUEUESIZE", "" + this.queue.getQueueLength());
+        if (statistics.cpuQueueLargestLength < queue.getQueueLength()) {
+            statistics.cpuQueueLargestLength = queue.getQueueLength();
+            simulator.debug("STATS", "UPDATED MAX CPU QUEUE LENGTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        }
     }
 
     public boolean isWorking() {
@@ -231,8 +233,6 @@ public class CPU {
         else simulator.debug("CPU-TICK", "Active job: " + activeJob);
 
         if (!working) statistics.cpuTimeSpentWaiting += timedelta;
-        if (queue.getQueueLength() > statistics.cpuQueueLargestLength) {
-            statistics.cpuQueueLargestLength = queue.getQueueLength();
-        }
+        else statistics.cpuTimeSpentProcessing += timedelta;
     }
 }

@@ -82,9 +82,6 @@ public class Memory {
 	 */
     public void processCompleted(Process p) {
 		freeMemory += p.getMemoryNeeded();
-		statistics.cpuTimeSpentProcessing += p.getTimeSpentInCpu();
-		statistics.ioTimeSpentIn += p.getTimeSpentInIo();
-		statistics.ioTimeSpentWaiting += p.getTimeSpentWaitingForIo();
     }
 }
 

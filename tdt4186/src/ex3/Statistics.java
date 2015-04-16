@@ -34,10 +34,130 @@ public class Statistics
 
 	public long cpuTimeSpentWaiting=0L;
 
+	public long getNofCompletedProcesses() {
+		return nofCompletedProcesses;
+	}
+
+	public void setNofCompletedProcesses(long nofCompletedProcesses) {
+		this.nofCompletedProcesses = nofCompletedProcesses;
+	}
+
+	public long getNofCreatedProcesses() {
+		return nofCreatedProcesses;
+	}
+
+	public void setNofCreatedProcesses(long nofCreatedProcesses) {
+		this.nofCreatedProcesses = nofCreatedProcesses;
+	}
+
+	public long getTotalTimeSpentWaitingForMemory() {
+		return totalTimeSpentWaitingForMemory;
+	}
+
+	public void setTotalTimeSpentWaitingForMemory(long totalTimeSpentWaitingForMemory) {
+		this.totalTimeSpentWaitingForMemory = totalTimeSpentWaitingForMemory;
+	}
+
+	public long getMemoryQueueLengthTime() {
+		return memoryQueueLengthTime;
+	}
+
+	public void setMemoryQueueLengthTime(long memoryQueueLengthTime) {
+		this.memoryQueueLengthTime = memoryQueueLengthTime;
+	}
+
+	public long getMemoryQueueLargestLength() {
+		return memoryQueueLargestLength;
+	}
+
+	public void setMemoryQueueLargestLength(long memoryQueueLargestLength) {
+		this.memoryQueueLargestLength = memoryQueueLargestLength;
+	}
+
+	public long getNofSwitchedProcesses() {
+		return nofSwitchedProcesses;
+	}
+
+	public void setNofSwitchedProcesses(long nofSwitchedProcesses) {
+		this.nofSwitchedProcesses = nofSwitchedProcesses;
+	}
+
+	public long getNofProcessedIoOps() {
+		return nofProcessedIoOps;
+	}
+
+	public void setNofProcessedIoOps(long nofProcessedIoOps) {
+		this.nofProcessedIoOps = nofProcessedIoOps;
+	}
+
+	public long getCpuTimeSpentProcessing() {
+		return cpuTimeSpentProcessing;
+	}
+
+	public void setCpuTimeSpentProcessing(long cpuTimeSpentProcessing) {
+		this.cpuTimeSpentProcessing = cpuTimeSpentProcessing;
+	}
+
+	public long getCpuQueueLargestLength() {
+		return cpuQueueLargestLength;
+	}
+
+	public void setCpuQueueLargestLength(long cpuQueueLargestLength) {
+		this.cpuQueueLargestLength = cpuQueueLargestLength;
+	}
+
+	public long getIoQueueLargestLength() {
+		return ioQueueLargestLength;
+	}
+
+	public long getNofProcessesPlacedInCpuQueue() {
+		return nofProcessesPlacedInCpuQueue;
+	}
+
+	public void setNofProcessesPlacedInCpuQueue(long nofProcessesPlacedInCpuQueue) {
+		this.nofProcessesPlacedInCpuQueue = nofProcessesPlacedInCpuQueue;
+	}
+
+	public long getNofProcessesPlacedInIoQueue() {
+		return nofProcessesPlacedInIoQueue;
+	}
+
+	public void setNofProcessesPlacedInIoQueue(long nofProcessesPlacedInIoQueue) {
+		this.nofProcessesPlacedInIoQueue = nofProcessesPlacedInIoQueue;
+	}
+
+	public long getCpuTimeSpentWaiting() {
+		return cpuTimeSpentWaiting;
+	}
+
+	public void setCpuTimeSpentWaiting(long cpuTimeSpentWaiting) {
+		this.cpuTimeSpentWaiting = cpuTimeSpentWaiting;
+	}
+
+	public long getIoTimeSpentWaiting() {
+		return ioTimeSpentWaiting;
+	}
+
+	public void setIoTimeSpentWaiting(long ioTimeSpentWaiting) {
+		this.ioTimeSpentWaiting = ioTimeSpentWaiting;
+	}
+
+	public long getIoTimeSpentIn() {
+		return ioTimeSpentIn;
+	}
+
+	public void setIoTimeSpentIn(long ioTimeSpentIn) {
+		this.ioTimeSpentIn = ioTimeSpentIn;
+	}
+
 	public long ioTimeSpentWaiting=0L;
 
 	public long ioTimeSpentIn=0L;
 
+
+	public void setIoQueueLargestLength(long size) {
+		ioQueueLargestLength = size;
+	}
 
 	/**
 	 * Prints out a report summarizing all collected data about the simulation.
