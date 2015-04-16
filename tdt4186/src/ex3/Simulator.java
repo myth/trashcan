@@ -229,9 +229,9 @@ public class Simulator implements Constants
 		if (DEFAULT_VALUES) {
 			memorySize = 2048L;
 			maxCpuTime = 500L;
-			avgIoTime = 125L;
+			avgIoTime = 225L;
 			simulationLength = 250000L;
-			avgArrivalInterval = 1000L;
+			avgArrivalInterval = 500L;
 		} else {
 
 			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
