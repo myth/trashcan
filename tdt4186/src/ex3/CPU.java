@@ -12,9 +12,10 @@ public class CPU {
     private Gui gui;
     private IO io;
     private Memory memory;
-    private Process activeJob;
     private Statistics statistics;
     private long maxCpuTime;
+    private Process activeJob;
+    private boolean working;
 
     public CPU(Queue queue, Simulator simulator, Gui gui, Memory memory, Statistics statistics, long maxCpuTime) {
         this.queue = queue;
@@ -23,95 +24,157 @@ public class CPU {
         this.memory = memory;
         this.statistics = statistics;
         this.maxCpuTime = maxCpuTime;
+        this.working = false;
+        this.activeJob = null;
     }
 
     public void addProcessToQueue(Process p) {
         queue.insert(p);
-        p.setTimeOfLastEvent(simulator.getClock());
         p.setNofTimesInReadyQueue(p.getNofTimesInReadyQueue() + 1);
-
-        if (queue.getQueueLength() > statistics.cpuQueueLargestLength) statistics.cpuQueueLargestLength = queue.getQueueLength();
         statistics.nofProcessesPlacedInCpuQueue++;
+        if (statistics.cpuQueueLargestLength < queue.getQueueLength()) statistics.cpuQueueLargestLength = queue.getQueueLength();
+        simulator.debug("CPU][QUEUESIZE", "" + this.queue.getQueueLength());
     }
 
-    public void executeProcess() {
-        Simulator.debug("CPU", "Clock: " + simulator.getClock());
-        // Setup
-        long cpuTime = 0L;
-        Process p = (Process) queue.removeNext();
-        Simulator.debug("CPU", "Queue Size: " + this.queue.getQueueLength());
-        Simulator.debug("CPU", "Executing job on process " + p.getProcessId() + " (Time left: " + p.getCpuTimeNeeded() + " ms. " +
-            "Time until next I/O: " + p.getTimeToNextIoOperation() + ")");
-        gui.setCpuActive(p);
-        p.setTimeSpentInReadyQueue(p.getTimeSpentInReadyQueue() + simulator.getClock() - p.getTimeOfLastEvent());
+    public boolean isWorking() {
+        return this.working;
+    }
 
-        /* What will happen with this process? */
-        // Will it terminate during this cycle?
-        if (p.getCpuTimeNeeded() < p.getTimeToNextIoOperation() && p.getCpuTimeNeeded() < maxCpuTime) {
+    public Process fetchProcess() {
+        // Return null of queue is empty
+        if (queue.isEmpty()) return null;
 
-            Simulator.debug("CPU", "Process " + p.getProcessId() + " will terminate this cycle.");
+        // Fetch and load the next job
+        activeJob = (Process) queue.removeNext();
+        simulator.debug("CPU", "Setting active job to: " + activeJob.getProcessId());
+        working = true;
 
-            // Update the time spent in CPU
-            cpuTime = p.getCpuTimeNeeded();
-            p.setTimeSpentInCpu(p.getTimeSpentInCpu() + cpuTime);
+        // Debug output
+        simulator.debug("CPU", "Process " + activeJob.getProcessId() + " loaded into CPU. (Time left: " + activeJob.getCpuTimeNeeded() + "ms)" +
+        " (Next I/O: " + activeJob.getTimeToNextIoOperation() + "ms)");
 
-            // Insert an event that should call end_process after this time has passed
-            simulator.fireEvent(Constants.END_PROCESS, simulator.getClock() + cpuTime);
+        // Update the gUI
+        gui.setCpuActive(activeJob);
 
-            memory.processCompleted(p);
+        // Return the active job
+        return activeJob;
+    }
 
-            return;
+    public void switchProcess() {
 
-        // We will encounter either an I/O operation or force switch
-        } else {
+        simulator.debug("CPU", "Forcing switch on process: " + activeJob.getProcessId());
+        long cpuTime = Math.abs(simulator.getClock() - activeJob.getTimeOfLastEvent());
+        activeJob.setTimeSpentInCpu(activeJob.getTimeSpentInCpu() + cpuTime);
+        activeJob.setCpuTimeNeeded(activeJob.getCpuTimeNeeded() - cpuTime);
+        activeJob.setTimeToNextIoOperation(activeJob.getTimeToNextIoOperation() - cpuTime);
+        activeJob.setTimeOfLastEvent(simulator.getClock());
 
-            // Will there be an I/O operation?
-            if (p.getTimeToNextIoOperation() < maxCpuTime && p.getTimeToNextIoOperation() < p.getCpuTimeNeeded()) {
+        // Re-add the process to the queue
+        addProcessToQueue(activeJob);
 
-                Simulator.debug("CPU", "Process " + p.getProcessId() + " must perform I/O.");
+        // Update statistics
+        statistics.nofSwitchedProcesses++;
 
-                // Set the cpuTime
-                cpuTime = p.getTimeToNextIoOperation();
+        // Stop the CPU
+        stop();
 
-                // Set the time spent in CPU
-                p.setTimeSpentInCpu(p.getTimeSpentInCpu() + cpuTime);
+        // Fetch next job
+        Process p = fetchProcess();
 
-                // Add the process to I/O queue
-                io.addProcessToQueue(p);
+        // If we have a next job, generate a new event
+        if (p != null) {
+            generateEvent(p);
+            p.setTimeOfLastEvent(simulator.getClock());
+        }
+    }
 
-                // Reduce CPU time needed
-                p.setCpuTimeNeeded(p.getCpuTimeNeeded() - cpuTime);
+    public void endProcess() {
+        simulator.debug("CPU", "Terminating process: " + activeJob.getProcessId() + " after " + activeJob.getTimeSpentInCpu() + "ms");
+
+        // Update times
+        long cpuTime = Math.abs(simulator.getClock() - activeJob.getTimeOfLastEvent());
+        activeJob.setTimeSpentInCpu(activeJob.getTimeSpentInCpu() + cpuTime);
+        activeJob.setCpuTimeNeeded(activeJob.getCpuTimeNeeded() - cpuTime);
+
+        // Extra negative reset check
+        if (activeJob.getCpuTimeNeeded() < 0) activeJob.setCpuTimeNeeded(0L);
+
+        memory.processCompleted(activeJob);
+        statistics.nofCompletedProcesses++;
+        activeJob.setTimeOfLastEvent(simulator.getClock());
+
+        // Stop current execution
+        stop();
+
+        // Fetch next job
+        Process p = fetchProcess();
+
+        // If we have a next job, generate a new event
+        if (p != null) {
+            generateEvent(p);
+            p.setTimeOfLastEvent(simulator.getClock());
+        }
+    }
+
+    public void processIoRequest() {
+
+        simulator.debug("CPU", "Ending process: " + activeJob.getProcessId() + " to perform I/O instead.");
+
+        // Update times
+        long cpuTime = Math.abs(simulator.getClock() - activeJob.getTimeOfLastEvent());
+        activeJob.setTimeSpentInCpu(activeJob.getTimeSpentInCpu() + cpuTime);
+        activeJob.setCpuTimeNeeded(activeJob.getCpuTimeNeeded() - cpuTime);
+
+        io.addProcessToQueue(activeJob);
+
+        // Stop current execution
+        stop();
+
+        // Tell I/O to get kicking if it's slacking
+        if (!io.isWorking()) {
+            Process ioProcess = io.executeNext();
+            // If we have
+            if (ioProcess != null) {
+                // Debug
+                simulator.debug("IO", "Executing I/O on process " + ioProcess.getProcessId());
 
                 // Fire the event
-                simulator.fireEvent(Constants.IO_REQUEST, simulator.getClock() + cpuTime);
-
-            } else if (p.getCpuTimeNeeded() > maxCpuTime && p.getTimeToNextIoOperation() > maxCpuTime) {
-                // We will have a forced process switch
-
-                Simulator.debug("CPU", "Process " + p.getProcessId() + " will be force-switched.");
-
-                // Set the cpuTime
-                cpuTime = maxCpuTime;
-
-                // Set the time spent
-                p.setTimeSpentInCpu(p.getTimeSpentInCpu() + cpuTime);
-
-                // Reduce cpu time needed and time left to next I/O op
-                p.setCpuTimeNeeded(p.getCpuTimeNeeded() - cpuTime);
-                p.setTimeToNextIoOperation(p.getTimeToNextIoOperation() - cpuTime);
-
-                // Reinsert the process into the queue
-                addProcessToQueue(p);
-
-                simulator.fireEvent(Constants.SWITCH_PROCESS, simulator.getClock() + cpuTime);
-
-                // Update statistics
-                statistics.nofSwitchedProcesses++;
-            } else {
-                Simulator.debug("CPU", "WARNING: WE SHOULDN'T BE HERE!");
+                simulator.fireEvent(Constants.END_IO, simulator.getClock() + io.getAvgIoTime());
+                ioProcess.setTimeOfLastEvent(simulator.getClock());
             }
         }
-        p.setTimeOfLastEvent(simulator.getClock());
+
+        // Fetch next job
+        Process p = fetchProcess();
+
+        // If we have a next job, generate a new event
+        if (p != null) {
+            generateEvent(p);
+            p.setTimeOfLastEvent(simulator.getClock());
+        }
+    }
+
+    public void stop() {
+        simulator.debug("CPU", "Stopping execution of process " + activeJob.getProcessId());
+        activeJob = null;
+        working = false;
+        gui.setCpuActive(null);
+    }
+
+    public void generateEvent(Process p) {
+        // Will the process terminate?
+        if (p.getCpuTimeNeeded() < maxCpuTime && p.getCpuTimeNeeded() < p.getTimeToNextIoOperation()) {
+            simulator.debug("CPU", "Process " + p.getProcessId() + " will be completed.");
+            simulator.fireEvent(Constants.END_PROCESS, simulator.getClock() + p.getCpuTimeNeeded());
+        // Will the process be forecfully switched?
+        } else if (maxCpuTime < p.getCpuTimeNeeded() && maxCpuTime < p.getTimeToNextIoOperation()) {
+            simulator.debug("CPU", "Process " + p.getProcessId() + " will be forcefully switched.");
+            simulator.fireEvent(Constants.SWITCH_PROCESS, simulator.getClock() + maxCpuTime);
+        // The process will encounter I/O
+        } else {
+            simulator.debug("CPU", "Process " + p.getProcessId() + " will encounter I/O");
+            simulator.fireEvent(Constants.IO_REQUEST, simulator.getClock() + p.getTimeToNextIoOperation());
+        }
     }
 
     public void setIo(IO io) {
@@ -154,19 +217,22 @@ public class CPU {
         this.memory = memory;
     }
 
-    public Process getActiveJob() {
-        return activeJob;
-    }
-
-    public void setActiveJob(Process activeJob) {
-        this.activeJob = activeJob;
-    }
-
     public Statistics getStatistics() {
         return statistics;
     }
 
     public void setStatistics(Statistics statistics) {
         this.statistics = statistics;
+    }
+
+    public void timePassed(long timedelta) {
+
+        if (activeJob != null) simulator.debug("CPU-TICK", "Active job: " + activeJob.getProcessId());
+        else simulator.debug("CPU-TICK", "Active job: " + activeJob);
+
+        if (!working) statistics.cpuTimeSpentWaiting += timedelta;
+        if (queue.getQueueLength() > statistics.cpuQueueLargestLength) {
+            statistics.cpuQueueLargestLength = queue.getQueueLength();
+        }
     }
 }

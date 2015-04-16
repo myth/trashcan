@@ -79,6 +79,8 @@ public class Simulator implements Constants
 			// Let the memory unit and the GUI know that time has passed
 			memory.timePassed(timeDifference);
 			gui.timePassed(timeDifference);
+			cpu.timePassed(timeDifference);
+			io.timePassed(timeDifference);
 			// Deal with the event
 			if (clock < simulationLength) {
 				processEvent(event);
@@ -130,6 +132,15 @@ public class Simulator implements Constants
 
 		memory.insertProcess(newProcess);
 		flushMemoryQueue();
+
+		// If CPU is not working, tell it to fetch next job
+		if (!cpu.isWorking()) {
+			Process p = cpu.fetchProcess();
+			if (p != null) {
+				cpu.generateEvent(p);
+			}
+		}
+
 		// Add an event for the next process arrival
 		long nextArrivalTime = clock + 1 + (long)(2*Math.random()*avgArrivalInterval);
 		eventQueue.insertEvent(new Event(NEW_PROCESS, nextArrivalTime));
@@ -145,22 +156,14 @@ public class Simulator implements Constants
 		Process p = memory.checkMemory(clock);
 		// As long as there is enough memory, processes are moved from the memory queue to the cpu queue
 		while(p != null) {
-
-			// TODO: Add this process to the CPU queue!
-			// Also add new events to the event queue if needed
+			// Add the process to CPU queue
 			cpu.addProcessToQueue(p);
-
-			// Try to use the freed memory:
-			flushMemoryQueue();
 
 			// Update statistics
 			p.updateStatistics(statistics);
 
 			// Check for more free memory
 			p = memory.checkMemory(clock);
-		}
-		if (!this.cpu.getQueue().isEmpty()) {
-			fireEvent(SWITCH_PROCESS, clock);
 		}
 	}
 
@@ -172,16 +175,14 @@ public class Simulator implements Constants
 	 * Simulates a process switch.
 	 */
 	private void switchProcess() {
-		if (!cpu.getQueue().isEmpty()) {
-			cpu.executeProcess();
-		}
+		cpu.switchProcess();
 	}
 
 	/**
 	 * Ends the active process, and deallocates any resources allocated to it.
 	 */
 	private void endProcess() {
-		statistics.nofCompletedProcesses++;
+		cpu.endProcess();;
 	}
 
 	/**
@@ -189,11 +190,7 @@ public class Simulator implements Constants
 	 * perform an I/O operation.
 	 */
 	private void processIoRequest() {
-		if (!io.getQueue().isEmpty()) io.executeProcess();
-		else {
-			// Reset GUI
-			this.gui.setIoActive(null);
-		}
+		cpu.processIoRequest();
 	}
 
 	/**
@@ -201,8 +198,7 @@ public class Simulator implements Constants
 	 * is done with its I/O operation.
 	 */
 	private void endIoOperation() {
-		io.endIoProcess();
-		this.gui.setIoActive(null);
+		io.stop();
 	}
 
 	/**
@@ -233,9 +229,9 @@ public class Simulator implements Constants
 		if (DEFAULT_VALUES) {
 			memorySize = 2048L;
 			maxCpuTime = 500L;
-			avgIoTime = 325L;
+			avgIoTime = 225L;
 			simulationLength = 90000L;
-			avgArrivalInterval = 2500L;
+			avgArrivalInterval = 5000L;
 		} else {
 
 			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -272,7 +268,7 @@ public class Simulator implements Constants
 		this.eventQueue.insertEvent(new Event(type, timeOfEvent));
 	}
 
-	public static void debug(String device, String input) {
-		System.out.println("[" + device + "] " + input);
+	public void debug(String device, String input) {
+		System.out.println("[" + clock + "][" + device + "] " + input);
 	}
 }
