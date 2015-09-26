@@ -5,3 +5,5 @@
 *.iml
 *.ipr
 out/
+debug_handout_ps3/
+optimize_handout_ps3/
