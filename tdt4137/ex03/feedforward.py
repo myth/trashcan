@@ -19,6 +19,13 @@ if __name__ == '__main__':
     ds.addSample((7,), (7,))
     ds.addSample((8,), (8,))
 
+    offset = SupervisedDataSet(1, 1)
+    offset.addSample((-5,), (-5,))
+    offset.addSample((0.00002,), (0.00002,))
+    offset.addSample((200,), (200,))
+    offset.addSample((50000,), (50000,))
+
+
     net = buildNetwork(1, 8, 1, bias=True, hiddenclass=TanhLayer)
     net.sortModules()
     trainer = BackpropTrainer(net, ds)
@@ -26,6 +33,7 @@ if __name__ == '__main__':
     trainer.trainUntilConvergence(verbose=False, validationProportion=0.15, maxEpochs=1000, continueEpochs=10)
 
     print(net.activateOnDataset(ds))
+    print(net.activateOnDataset(offset))
 
     print(net)
     print(net.params)

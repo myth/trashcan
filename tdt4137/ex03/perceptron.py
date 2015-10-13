@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     print('[i] --- PERCEPTRON v1.0 ----------------------')
 
-    TOTAL_TRAINING_SESSIONS = 500
+    TOTAL_TRAINING_SESSIONS = 50
     AND = [
         (array([0, 0]), 0),
         (array([0, 1]), 0),
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     while trains < TOTAL_TRAINING_SESSIONS:
         trains += 1
         print('[%d] --- Training AND ---------------------' % trains)
-        p_and = Perceptron(t=0.4, lrate=0.1)
+        p_and = Perceptron(t=0.5, lrate=0.1)
         p_and.train(AND)
         print('[%d] --- Training OR --------------------- ' % trains)
         p_or = Perceptron(t=0.0, lrate=0.2)
