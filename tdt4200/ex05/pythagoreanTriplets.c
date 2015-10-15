@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         int sum = 0;
 
         // Do some bounds checks
-        if (start[i] <= stop[i]) {
+        if (stop[i] <= start[i]) {
             printf("%d\n", sum);
             continue;
         }
