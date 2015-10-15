@@ -37,19 +37,19 @@ int main(int argc, char **argv) {
 	numThreads = (int*) calloc(amountOfRuns, sizeof(int));
 
 	int tot_threads, current_start, current_stop;
-	for (int i = 0; i < amountOfRuns; ++i){
+	for (int i = 0; i < amountOfRuns; ++i) {
 
 		// Read in each line of input that follows after first line
 		free(inputLine); lineLength = 0; inputLine = NULL;
-		ssize_t readChars = getline(&inputLine, &lineLength, stdin);
+		getline(&inputLine, &lineLength, stdin);
 
 		// If there exists at least two matches (2x %d)...
-		if (sscanf(inputLine, "%d %d %d", &current_start, &current_stop, &tot_threads) >= 2){
-			if(current_start < 0 || current_stop < 0){
+		if (sscanf(inputLine, "%d %d %d", &current_start, &current_stop, &tot_threads) >= 2) {
+			if(current_start < 0 || current_stop < 0) {
 				current_start = 0, current_stop = 0;
 			}
-			stop[i] = current_stop;
-			start[i] = current_start;
+            start[i] = current_start;
+            stop[i] = current_stop;
 			numThreads[i] = tot_threads;
 		}
 	}
@@ -59,22 +59,33 @@ int main(int argc, char **argv) {
 	*	In other words, a total of <amountOfRuns> sums/printfs.
 	*/
 
-	int sum;
 
     /*
      *  Sequential solution
      */
-    for (int c = start[0]; c < stop[0]; c = pow(c, 2)) {
-        for (int b = 4; b < c; b = pow(b, 2)) {
-            for (int a = 3; a < b; b = pow(b, 2)) {
-                if (pow(a, 2) + pow(b, 2) == pow(c, 2) && is_coprime(a, b) && is_coprime(b, c) && is_coprime(a, c)) {
-                    sum++;
+    for (int i = 0; i < amountOfRuns; i++) {
+        int sum = 0;
+
+        // Do some bounds checks
+        if (start[i] <= stop[i]) {
+            printf("%d\n", sum);
+            continue;
+        }
+
+        // For each run, we sum up the primitive triplets
+        for (int c = start[i]; c < stop[i]; c++) {
+            for (int b = 4; b < c; b++) {
+                for (int a = 3; a < b; a++) {
+                    if (pow(a, 2) + pow(b, 2) == pow(c, 2)) {
+                        if (is_coprime(a, b) && is_coprime(b, c) && is_coprime(a, c)) {
+                            sum++;
+                        }
+                    }
                 }
             }
         }
+        printf("%d\n", sum);
     }
-
-	printf("%d\n", sum);
 
 	return 0;
 }
@@ -85,7 +96,7 @@ int main(int argc, char **argv) {
 
 // Find the greatest common divisor between two numbers
 int gcd(int a, int b) {
-    while (a != b) {
+    while (b != 0) {
         int t = b;
         b = a % b;
         a = t;
