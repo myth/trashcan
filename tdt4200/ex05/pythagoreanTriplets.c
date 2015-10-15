@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <math.h> // for mathemetaical functions
 #include <stdbool.h> // for bool
 #include <stdio.h> // for stdin
@@ -58,6 +60,20 @@ int main(int argc, char **argv) {
 	*/
 
 	int sum;
+
+    /*
+     *  Sequential solution
+     */
+    for (int c = start[0]; c < stop[0]; c = pow(c, 2)) {
+        for (int b = 4; b < c; b = pow(b, 2)) {
+            for (int a = 3; a < b; b = pow(b, 2)) {
+                if (pow(a, 2) + pow(b, 2) == pow(c, 2) && is_coprime(a, b) && is_coprime(b, c) && is_coprime(a, c)) {
+                    sum++;
+                }
+            }
+        }
+    }
+
 	printf("%d\n", sum);
 
 	return 0;
@@ -69,10 +85,11 @@ int main(int argc, char **argv) {
 
 // Find the greatest common divisor between two numbers
 int gcd(int a, int b) {
-    while a != b:
+    while (a != b) {
         int t = b;
         b = a % b;
         a = t;
+    }
     return a;
 }
 
