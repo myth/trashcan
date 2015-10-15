@@ -1,3 +1,5 @@
+#include <math.h> // for mathemetaical functions
+#include <stdbool.h> // for bool
 #include <stdio.h> // for stdin
 #include <stdlib.h>
 #include <unistd.h> // for ssize_t
@@ -10,6 +12,16 @@
 #include <omp.h>
 #endif
 
+/*
+ *  Function declarations
+ */
+int gcd(int a, int b);
+bool is_coprime(int a, int b);
+
+
+/*
+ *  Main method
+ */
 int main(int argc, char **argv) {
 	char *inputLine = NULL; size_t lineLength = 0;
 	int *start, *stop, *numThreads, amountOfRuns = 0;
@@ -49,4 +61,22 @@ int main(int argc, char **argv) {
 	printf("%d\n", sum);
 
 	return 0;
+}
+
+/*
+ *  Helper functions
+ */
+
+// Find the greatest common divisor between two numbers
+int gcd(int a, int b) {
+    while a != b:
+        int t = b;
+        b = a % b;
+        a = t;
+    return a;
+}
+
+// Find whether two integers are coprime
+bool is_coprime(int a, int b) {
+    return gcd(a, b) == 1;
 }
