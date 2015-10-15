@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 CC=gcc
-CFLAGS=-Wall -O3
+CFLAGS=-Wall -O3 -lm
 
 all: pythagoreanTriplets
 

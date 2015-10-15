@@ -17,9 +17,8 @@
 /*
  *  Function declarations
  */
-int gcd(int a, int b);
-bool is_coprime(int a, int b);
-
+int gcd(unsigned int u, unsigned int v);
+bool is_coprime(unsigned int u, unsigned int v);
 
 /*
  *  Main method
@@ -71,15 +70,31 @@ int main(int argc, char **argv) {
             printf("%d\n", sum);
             continue;
         }
+        
+        // C is always on the form 4*n+1 with min of 5
+        unsigned int c = 5;
+        if (start[i] > 5) {
+            c = start[i];
+            while ((c - 1) % 4 != 0) c++;
+        }
 
-        // For each run, we sum up the primitive triplets
-        for (int c = start[i]; c < stop[i]; c++) {
-            for (int b = 4; b < c; b++) {
-                for (int a = 3; a < b; a++) {
+        // Outer loop incremented by 4, since we already know the form of C
+        for (; c < stop[i]; c += 4) {
+            for (unsigned int b = 4; b < c; b++) {   
+                // If the pairs are not coprime, continue
+                if (!is_coprime(b, c)) {
+                    continue;
+                }
+
+                unsigned int a = 3;
+                // If b is odd, then a must be even
+                if (b % 2 == 1) {
+                    a = 4;
+                }
+                
+                for (; a < b; a += 2) {
                     if (pow(a, 2) + pow(b, 2) == pow(c, 2)) {
-                        if (is_coprime(a, b) && is_coprime(b, c) && is_coprime(a, c)) {
-                            sum++;
-                        }
+                        sum++;
                     }
                 }
             }
@@ -90,21 +105,23 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
+
 /*
  *  Helper functions
  */
 
 // Find the greatest common divisor between two numbers
-int gcd(int a, int b) {
-    while (b != 0) {
-        int t = b;
-        b = a % b;
-        a = t;
+int gcd(unsigned int u, unsigned int v) {
+    while (v != 0) {
+        unsigned int t = v;
+        v = u % v;
+        u = t;
     }
-    return a;
+    return u;
 }
 
 // Find whether two integers are coprime
-bool is_coprime(int a, int b) {
-    return gcd(a, b) == 1;
+bool is_coprime(unsigned int u, unsigned int v) {
+    return gcd(u, v) == 1;
 }
+
