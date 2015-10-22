@@ -6,9 +6,6 @@
 #include <stdlib.h>
 #include <unistd.h> // for ssize_t
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -74,18 +71,34 @@ int main(int argc, char **argv) {
             continue;
         }
         
-        int n = 1;
-        for (int m = 2; m*m < stop[i]; m++) {
-            if (m % 2 == 0) { n = 1; }
-            else { n = 2; }
-            for (; n < m; n += 2) {
-                if ((m*m+n*n <= stop[i]) && (m*m+n*n >= start[i]) && is_coprime(m, n)) {
-                    sum++;
-                    // printf("M: %d, N: %d,   a:%d, b:%d, c:%d\n", m, n, m*m - n*n, 2*m*n, m*m + n*n);
+        // C is always on the form 4*n+1 with min of 5
+        unsigned int c = 5;
+        if (start[i] > 5) {
+            c = start[i];
+            while ((c - 1) % 4 != 0) c++;
+        }
+
+        // Outer loop incremented by 4, since we already know the form of C
+        for (; c < stop[i]; c += 4) {
+            for (unsigned int b = 4; b < c; b++) {   
+                // If the pairs are not coprime, continue
+                if (!is_coprime(b, c)) {
+                    continue;
+                }
+
+                unsigned int a = 3;
+                // If b is odd, then a must be even
+                if (b % 2 == 1) {
+                    a = 4;
+                }
+                
+                for (; a < b; a += 2) {
+                    if (pow(a, 2) + pow(b, 2) == pow(c, 2)) {
+                        sum++;
+                    }
                 }
             }
         }
-
         printf("%d\n", sum);
     }
 
