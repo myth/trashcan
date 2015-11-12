@@ -178,8 +178,11 @@ void performNewIdeaIteration(AccurateImage *imageOut, AccurateImage *imageIn, in
                 int offset = width * senterY + senterX;
                 countIncluded = (endx - startx + 1) * (endy - starty + 1);
                 
+                #pragma critical
                 imageOut->data[offset].red = sum_red / countIncluded;
+                #pragma critical
                 imageOut->data[offset].green = sum_green / countIncluded;
+                #pragma critical
                 imageOut->data[offset].blue = sum_blue / countIncluded;
             }
         
