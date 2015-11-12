@@ -5,6 +5,8 @@
 #include <omp.h>
 #include "ppm.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
 
 // Image from:
 // http://7-themes.com/6971875-funny-flowers-pictures.html
@@ -57,87 +59,83 @@ void freeImage(AccurateImage *image){
 // Using OpenMP inside this function itself might be avoided
 // You may be able to do this only with a single OpenMP directive
 void performNewIdeaIteration(AccurateImage *imageOut, AccurateImage *imageIn, int size) {
+    int width = imageIn->x;
+    int height = imageIn->y;
     #pragma omp parallel
     {
-        int nthreads = omp_get_num_threads();
-        int width = imageIn->x;
-        int height = imageIn->y;
-        int range_interval, thread_start_y, thread_stop_y;
+        // Accumulation variables
         float sum_red = 0;
         float sum_blue = 0;
         float sum_green = 0;
         int countIncluded = 0;
         
-        // Parallelization constructs
+        // Parallelization variables
+        int range_interval, thread_start_y, thread_stop_y;
+        int nthreads = omp_get_num_threads();
         int thread_id = omp_get_thread_num();
+
+        // Calculate thread local bounds
         range_interval = height / nthreads;
         thread_start_y = range_interval * thread_id;
-        thread_stop_y = thread_start_y + range_interval;
-        
+        thread_stop_y = thread_start_y + range_interval > height ? height : thread_start_y + range_interval;
+
         // line buffer that will save the sum of some pixel in the column
         AccuratePixel *line_buffer = (AccuratePixel*) malloc(imageIn->x*sizeof(AccuratePixel));
         memset(line_buffer,0,imageIn->x*sizeof(AccuratePixel));
 
-        // Lookbehind of "size" rows for all successor threads
-        if (thread_id > 0) {
-            thread_start_y -= size;
-        }
-        // Rectify for out-of-bounds
-        if (thread_id == nthreads - 1) {
-            thread_stop_y = height;
+        // Initialize FIRST LINE of linebuffer
+        int lower, upper;
+        lower = thread_start_y - size < 0 ? 0 : thread_start_y - size;
+        upper = thread_start_y + size;
+        for (int y = lower; y <= upper; y++) {
+            for (int i = 0; i < width; i++) {
+                line_buffer[i].blue += imageIn->data[width*y+i].blue;
+                line_buffer[i].red += imageIn->data[width*y+i].red;
+                line_buffer[i].green += imageIn->data[width*y+i].green;
+            }
         }
         
-        // Iterate over each line of pixelx.
+        // Iterate over each line of pixels
         for (int senterY = thread_start_y; senterY < thread_stop_y; senterY++) {
             // first and last line considered  by the computation of the pixel in the line senterY
             int starty = senterY - size;
             int endy = senterY + size;
-            
-            // Initialize and update the line_buffer.
-            // For OpenMP this might cause problems
-            // Separating out the initialization part might help
-            if (starty <= thread_start_y) {
-                starty = thread_start_y;
-                if (senterY == thread_start_y) {
-                    // for all pixel in the first line, we sum all pixel of the column (until the line endy)
-                    // we save the result in the array line_buffer
-                    for (int line_y = starty; line_y < endy; line_y++) {
-                        for (int i = 0; i < width; i++) {
-                            line_buffer[i].blue += imageIn->data[width*line_y+i].blue;
-                            line_buffer[i].red += imageIn->data[width*line_y+i].red;
-                            line_buffer[i].green += imageIn->data[width*line_y+i].green;
-                        }
+
+            if (starty < 0) starty = 0;
+
+            // Make sure we skip the first line, since it has already been initialized
+            if (senterY > thread_start_y) {
+                if (starty <= 0) {
+                    starty = 0;
+                    for (int i = 0; i < width; i++) {
+                        // add the next pixel of the next line in the column x
+                        line_buffer[i].blue += imageIn->data[width*endy+i].blue;
+                        line_buffer[i].red += imageIn->data[width*endy+i].red;
+                        line_buffer[i].green += imageIn->data[width*endy+i].green;
                     }
-                }
-                for (int i = 0; i < width; i++) {
-                    // add the next pixel of the next line in the column x
-                    line_buffer[i].blue += imageIn->data[width*endy+i].blue;
-                    line_buffer[i].red += imageIn->data[width*endy+i].red;
-                    line_buffer[i].green += imageIn->data[width*endy+i].green;
+
                 }
 
+                else if (endy >= height) {
+                    // for the last lines, we just need to subtract the first added line
+                    endy = height - 1;
+                    for (int i = 0; i < width; i++) {
+                        line_buffer[i].blue -= imageIn->data[width*(starty-1)+i].blue;
+                        line_buffer[i].red -= imageIn->data[width*(starty-1)+i].red;
+                        line_buffer[i].green -= imageIn->data[width*(starty-1)+i].green;
+                    }	
+                }
+                else{
+                    // general case
+                    // add the next line and remove the first added line
+                    for (int i=0; i < width; i++) {
+                        line_buffer[i].blue += imageIn->data[width*endy+i].blue - imageIn->data[width*(starty-1)+i].blue;
+                        line_buffer[i].red += imageIn->data[width*endy+i].red - imageIn->data[width*(starty-1)+i].red;
+                        line_buffer[i].green += imageIn->data[width*endy+i].green - imageIn->data[width*(starty-1)+i].green;
+                    }	
+                }
+                // End of line_buffer initialisation.
             }
-
-            else if (endy >= height) {
-                // for the last lines, we just need to subtract the first added line
-                endy = height - 1;
-                for (int i = 0; i < width; i++) {
-                    line_buffer[i].blue -= imageIn->data[width*(starty-1)+i].blue;
-                    line_buffer[i].red -= imageIn->data[width*(starty-1)+i].red;
-                    line_buffer[i].green -= imageIn->data[width*(starty-1)+i].green;
-                }	
-            }
-            else{
-                // general case
-                // add the next line and remove the first added line
-                for (int i=0; i < width; i++) {
-                    line_buffer[i].blue += imageIn->data[width*endy+i].blue - imageIn->data[width*(starty-1)+i].blue;
-                    line_buffer[i].red += imageIn->data[width*endy+i].red - imageIn->data[width*(starty-1)+i].red;
-                    line_buffer[i].green += imageIn->data[width*endy+i].green - imageIn->data[width*(starty-1)+i].green;
-                }	
-            }
-            // End of line_buffer initialisation.
-            
             
             sum_green = 0;
             sum_red = 0;
@@ -178,11 +176,8 @@ void performNewIdeaIteration(AccurateImage *imageOut, AccurateImage *imageIn, in
                 int offset = width * senterY + senterX;
                 countIncluded = (endx - startx + 1) * (endy - starty + 1);
                 
-                #pragma critical
                 imageOut->data[offset].red = sum_red / countIncluded;
-                #pragma critical
                 imageOut->data[offset].green = sum_green / countIncluded;
-                #pragma critical
                 imageOut->data[offset].blue = sum_blue / countIncluded;
             }
         
@@ -270,14 +265,13 @@ int main(int argc, char** argv) {
     PPMImage *imageOut;
     imageOut = (PPMImage *)malloc(sizeof(PPMImage));
     imageOut->data = (PPMPixel*)malloc(image->x * image->y * sizeof(PPMPixel));
-    
+ 
     // Process the tiny case:
     performNewIdeaIteration(imageSmall, imageUnchanged, 2);
     performNewIdeaIteration(imageBuffer, imageSmall, 2);
     performNewIdeaIteration(imageSmall, imageBuffer, 2);
     performNewIdeaIteration(imageBuffer, imageSmall, 2);
     performNewIdeaIteration(imageSmall, imageBuffer, 2);
-    
     
     // Process the small case:
     performNewIdeaIteration(imageBig, imageUnchanged,3);
@@ -295,13 +289,14 @@ int main(int argc, char** argv) {
         writeStreamPPM(stdout, imageOut);
     }
 
-	// Process the medium case:
+    // Process the medium case:
 	performNewIdeaIteration(imageSmall, imageUnchanged, 5);
 	performNewIdeaIteration(imageBuffer, imageSmall, 5);
 	performNewIdeaIteration(imageSmall, imageBuffer, 5);
 	performNewIdeaIteration(imageBuffer, imageSmall, 5);
 	performNewIdeaIteration(imageSmall, imageBuffer, 5);
 	
+
 	// save small case
 	performNewIdeaFinalization(imageBig, imageSmall, imageOut);
 	if(argc > 1) {
@@ -309,7 +304,7 @@ int main(int argc, char** argv) {
 	} else {
 		writeStreamPPM(stdout, imageOut);
 	}
-	
+
     // process the large case
 	performNewIdeaIteration(imageBig, imageUnchanged, 8);
 	performNewIdeaIteration(imageBuffer, imageBig, 8);
