@@ -59,6 +59,7 @@ public class BoidController {
             Boid b = new Boid(flock, this);
             drawBoid(b);
         }
+        
         // Initialize obstructions
         Obstruction obsOne = new Obstruction(this);
         Obstruction obsTwo = new Obstruction(this);
@@ -129,7 +130,7 @@ public class BoidController {
     }
 
     public void drawPredator(Predator b) {
-        gc.setFill(Color.GREEN);
+        gc.setFill(Color.YELLOW);
         gc.fillOval(
             b.position.get(0) - b.radius,
             b.position.get(1) - b.radius,

@@ -48,7 +48,6 @@ public class Boid extends Physical {
         Vector fle = calcFlee();
 
         velocity.add(avo);
-        avo.multiply(2);
         velocity.add(ali);
         velocity.add(coh);
         velocity.add(sep);
@@ -89,7 +88,7 @@ public class Boid extends Physical {
         }
 
         if (count > 0) {
-            force.divide((double) count);
+            // force.divide((double) count);
             force.normalize();
             force.multiply(ctrl.separation.getValue());
         }
@@ -107,7 +106,7 @@ public class Boid extends Physical {
         for (Boid b: flock) {
             if (this == b) continue;
             double dist = position.distanceTo(b.position);
-            if (dist < Main.NEIGHBOR_RADIUS && dist > 15) {
+            if (dist < Main.NEIGHBOR_RADIUS && dist > 25) {
                 sentroid.add(b.position);
                 count++;
             }
@@ -161,7 +160,7 @@ public class Boid extends Physical {
         Obstruction obs = null;
         for (Obstruction o: ctrl.getObstructions()) {
             if (obs == null) obs = o;
-            if (position.distanceTo(o.position) < Main.NEIGHBOR_RADIUS) {
+            if (position.distanceTo(o.position) < Main.NEIGHBOR_RADIUS - 30) {
                 if (position.distanceTo(o.position) < position.distanceTo(obs.position)) {
                     obs = o;
                 }
@@ -217,7 +216,7 @@ public class Boid extends Physical {
             if (dist - radius * 2 <= Main.NEIGHBOR_RADIUS) {
                 Vector diff = this.position.copy();
                 diff.subtract(p.position);
-                diff.divide(Math.pow(dist, 2)); // Weight by distance
+                diff.multiply(1 / dist); // Weight by distance
                 force.add(diff);
                 count++;
             }

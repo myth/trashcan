@@ -3,6 +3,8 @@ package no.overflow.it3708.model;
 import no.overflow.it3708.Main;
 import no.overflow.it3708.controller.BoidController;
 
+import java.util.ArrayList;
+
 /**
  * Created by Aleksander Skraastad (myth) on 1/28/16.
  * <p>
@@ -66,11 +68,19 @@ public class Predator extends Boid {
     private Vector calcSteer() {
         Boid closest = null;
         Vector steer = new Vector(2);
+        ArrayList<Boid> eaten = new ArrayList<>();
         for (Boid b : ctrl.getFlock()) {
             double dist = position.distanceTo(b.position);
             if (dist > Main.NEIGHBOR_RADIUS - radius - b.radius) continue;
             if (closest == null || this.position.distanceTo(closest.position) < dist - radius - b.radius) {
                 closest = b;
+            }
+
+
+            // "Eat" the boid and remove it from the flock
+            if (position.distanceTo(b.position) - radius - b.radius <= 0) {
+                eaten.add(b);
+                System.out.println("OM NOM NOM (Boids left: " + ctrl.getFlock().size() + ")");
             }
         }
         if (closest != null) {
@@ -79,6 +89,9 @@ public class Predator extends Boid {
             steer.normalize();
             steer.multiply(1 + ((1 / dist) * 10));
         }
+
+        // Remove the "eaten" boids from canvas
+        eaten.forEach(b -> ctrl.getFlock().remove(b));
 
         return steer;
     }
