@@ -59,7 +59,21 @@ public class BoidController {
             Boid b = new Boid(flock, this);
             drawBoid(b);
         }
-        
+
+        // Add some stuff
+        addObstaclesAndPredators();
+
+        // Set up our animation timeline
+        timeline = new Timeline(new KeyFrame(
+            Duration.millis(Main.GUI_FRAME_INTERVAL),
+            event -> tick()
+        ));
+        timeline.setCycleCount(Animation.INDEFINITE);
+
+        log.info("Initialized " + Main.NUM_BOIDS + " boids.");
+    }
+
+    public void addObstaclesAndPredators() {
         // Initialize obstructions
         Obstruction obsOne = new Obstruction(this);
         Obstruction obsTwo = new Obstruction(this);
@@ -72,15 +86,6 @@ public class BoidController {
         Predator predTwo = new Predator(this);
         drawPredator(predOne);
         drawPredator(predTwo);
-
-        // Set up our animation timeline
-        timeline = new Timeline(new KeyFrame(
-            Duration.millis(Main.GUI_FRAME_INTERVAL),
-            event -> tick()
-        ));
-        timeline.setCycleCount(Animation.INDEFINITE);
-
-        log.info("Initialized " + Main.NUM_BOIDS + " boids.");
     }
 
     public void clearCanvas() {

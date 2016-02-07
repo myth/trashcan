@@ -17,7 +17,7 @@ public class Main extends Application {
     public static final int GUI_FRAME_INTERVAL = 21; // Milliseconds
     public static final int CANVAS_WIDTH = 623; // 623
     public static final int CANVAS_HEIGHT = 498; // 498
-    public static final int NUM_BOIDS = 350;
+    public static final int NUM_BOIDS = 300;
     public static final double BOID_RADIUS = 2.5;
     public static final int NEIGHBOR_RADIUS = 75;
     public static final double PREDATOR_VELOCITY = 1.2;
