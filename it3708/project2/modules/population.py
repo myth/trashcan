@@ -30,8 +30,8 @@ class Individual(object):
         else:
             self.genotype = genotype
         self.generation = generation
+        self.fitness = 0.0
         self.phenotype = self.translate()
-        self.fitness = settings.FITNESS_FUNCTION(self.phenotype)
 
     def mutate(self):
         """
@@ -39,9 +39,10 @@ class Individual(object):
         """
 
         if random() < settings.GENOME_MUTATION_RATE:
+            getLogger(__name__).debug('Mutation occurring in %s' % self)
             GeneticOperator.mutate(self.genotype)
             self.phenotype = self.translate()
-            self.fitness = settings.FITNESS_FUNCTION(self.phenotype)
+            getLogger(__name__).debug('Mutation complete: %s' % self)
 
     def crossover(self, other):
         """
@@ -49,10 +50,8 @@ class Individual(object):
         """
 
         self.genotype, other.genotype = GeneticOperator.crossover(self.genotype, other.genotype)
-        self.phenotype = self.translate()
-        other.phenotype = other.translate()
-        self.fitness = settings.FITNESS_FUNCTION(self.phenotype)
-        other.fitness = settings.FITNESS_FUNCTION(other.phenotype)
+        self.translate()
+        other.translate()
 
     def diversity(self, other):
         """
@@ -69,7 +68,10 @@ class Individual(object):
         Translates this individual's genotype into a phenotype representation
         """
 
-        return Phenotype.translate_genotype_to_phenotype(self.genotype)
+        self.phenotype = Phenotype.translate_genotype_to_phenotype(self.genotype)
+        self.fitness = settings.FITNESS_FUNCTION(self.phenotype)
+
+        return self.phenotype
 
     def __str__(self):
         """
@@ -107,6 +109,7 @@ class Population(object):
             ))
         self.loop = evolution_loop
         self.avg_fitness = 0.0
+        self.std_dev = 0.0
         self.most_fit = None
 
         # Initialize a population size of given genome length as random values, and
@@ -114,36 +117,6 @@ class Population(object):
         self.individuals = list()
         for i in range(population_size):
             self.individuals.append(Individual(genome_length=genome_length))
-
-    def add_individual(self, individual):
-        """
-        Adds an individual to the population, and removes one of the five oldest individuals if full.
-        :param individual: An Individual object
-        """
-
-        if individual not in self.individuals:
-            if self.size < settings.MAX_POPULATION_SIZE:
-                self.individuals.append(individual)
-            else:
-                self.individuals.remove(choice(sorted(list(self.individuals), key=lambda i: i.generation)[:5]))
-
-    def add_individuals(self, individuals):
-        """
-        Adds a group of individuals to the population, and removes the corresponding number of oldest individuals
-        from the population if it is full.
-        :param individuals: A list of Individual objects
-        """
-
-        diff = settings.MAX_POPULATION_SIZE - self.size - len(individuals)
-        if diff > 0:
-            self.individuals.extend(individuals)
-        else:
-            # Remove the oldest
-            diff = abs(diff)
-            for i in sorted(list(self.individuals), key=lambda x: x.generation)[:diff]:
-                self.individuals.remove(i)
-            # Add the new ones
-            self.individuals.extend(individuals)
 
     @property
     def size(self):
@@ -174,6 +147,7 @@ class Population(object):
             tot_fitness += i.fitness
 
         self.avg_fitness = tot_fitness / self.size
+        self.std_dev = sum(map(lambda x: (x.fitness - self.avg_fitness)**2, self.individuals)) / self.size
         self.most_fit = most_fit
 
     def get_random_individual(self):

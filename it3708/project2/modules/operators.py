@@ -17,8 +17,12 @@ class GeneticOperator(object):
         """
 
         pos = random.randint(0, settings.GENOME_LENGTH - 1)
-        logging.getLogger(__name__).debug('Mutation occurred in pos %d' % pos)
-        genotype[pos] = not bool(genotype[pos])
+        logging.getLogger(__name__).debug('Mutation occurred in pos %d from %d to %d' % (
+            pos,
+            genotype[pos],
+            int(not genotype[pos])
+        ))
+        genotype[pos] = int(not genotype[pos])
 
     @staticmethod
     def crossover(genotype_one, genotype_two):
@@ -26,10 +30,28 @@ class GeneticOperator(object):
         This genetic operator performs crossover on a pair of genotypes
         """
 
-        s = random.randint(0, settings.GENOME_LENGTH - 1)
-        logging.getLogger(__name__).debug('Crossover occurred in pos %d' % s)
+        slicepoints = set()
+        while len(slicepoints) < settings.GENOME_CROSSOVER_POINTS:
+            slicepoints.add(random.randint(0, len(genotype_one)))
+        slicepoints = sorted(list(slicepoints))
+        slicepoints.append(len(genotype_one))
 
-        return genotype_one[:s] + genotype_two[s:], genotype_two[:s] + genotype_one[s:]
+        new_genotype_one = []
+        new_genotype_two = []
+
+        maintain = True
+        old = 0
+        while slicepoints:
+            s = slicepoints.pop()
+            if maintain:
+                new_genotype_one.extend(genotype_one[old:s])
+                new_genotype_two.extend(genotype_two[old:s])
+            else:
+                new_genotype_one.extend(genotype_two[old:s])
+                new_genotype_two.extend(genotype_one[old:s])
+            old = s
+
+        return new_genotype_one, new_genotype_two
 
 
 # Phenotype representation functions

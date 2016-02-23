@@ -29,4 +29,5 @@ if __name__ == '__main__':
         log.info('Multi-run complete: %s' % results)
     else:
         el = EvolutionLoop()
-        el.start()
+        for i in el.start():
+            print(i)

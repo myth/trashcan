@@ -16,7 +16,6 @@ class Fitness(object):
         """
 
         solution = settings.ONEMAX_SOLUTION
-
-        fitness = 1.0 / (1.0 + sum(int(phenotype[i] != solution[i]) for i in range(settings.GENOME_LENGTH)))
+        fitness = 1.0 / (1.0 + sum(phenotype[i] != solution[i] for i in range(settings.GENOME_LENGTH)))
 
         return fitness
