@@ -2,8 +2,7 @@
 #
 # Created by 'myth' on 2/19/16
 
-from logging import getLogger
-import numpy as np
+import logging
 import random
 import settings
 
@@ -14,11 +13,11 @@ class GeneticOperator(object):
     def mutate(genotype):
         """
         This genetic operator performs mutations on a genotype
-        :param genotype: A numpy bit vector
+        :param genotype: A bit vector
         """
 
-        pos = random.randint(0, len(genotype) - 1)
-        getLogger(__name__).debug('Mutation has occured in %s in position %d' % (genotype, pos))
+        pos = random.randint(0, settings.GENOME_LENGTH - 1)
+        logging.getLogger(__name__).debug('Mutation occurred in pos %d' % pos)
         genotype[pos] = not bool(genotype[pos])
 
     @staticmethod
@@ -27,18 +26,10 @@ class GeneticOperator(object):
         This genetic operator performs crossover on a pair of genotypes
         """
 
-        new_genotype_one = np.array([])
-        new_genotype_two = np.array([])
-        points = settings.GENOME_CROSSOVER_POINTS
-        step = int(len(genotype_one) / ((points + 1) * 2))  # We want to divide into N equal steps, and skip every other
-        for x in range(0, len(genotype_one), step):
-            new_genotype_one = np.append(new_genotype_one, genotype_two[x:x + step])
-            new_genotype_two = np.append(new_genotype_two, genotype_one[x:x + step])
+        s = random.randint(0, settings.GENOME_LENGTH - 1)
+        logging.getLogger(__name__).debug('Crossover occurred in pos %d' % s)
 
-        genotype_one = new_genotype_one
-        genotype_two = new_genotype_two
-
-        return genotype_one, genotype_two
+        return genotype_one[:s] + genotype_two[s:], genotype_two[:s] + genotype_one[s:]
 
 
 # Phenotype representation functions

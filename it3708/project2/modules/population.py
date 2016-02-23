@@ -18,7 +18,7 @@ class Individual(object):
 
     next_id = itertools.count().__next__
 
-    def __init__(self, genotype=None, genome_length=None, fitness=0, generation=0):
+    def __init__(self, genotype=None, genome_length=None, generation=0):
         """
         Constructor
         """
@@ -26,10 +26,12 @@ class Individual(object):
         self.ID = self.next_id()
         if genome_length:
             self.genotype = np.random.random_integers(0, 1, genome_length)
+            self.genotype = [int(i) for i in self.genotype]
         else:
             self.genotype = genotype
-        self.fitness = fitness
         self.generation = generation
+        self.phenotype = self.translate()
+        self.fitness = settings.FITNESS_FUNCTION(self.phenotype)
 
     def mutate(self):
         """
@@ -38,6 +40,8 @@ class Individual(object):
 
         if random() < settings.GENOME_MUTATION_RATE:
             GeneticOperator.mutate(self.genotype)
+            self.phenotype = self.translate()
+            self.fitness = settings.FITNESS_FUNCTION(self.phenotype)
 
     def crossover(self, other):
         """
@@ -45,6 +49,10 @@ class Individual(object):
         """
 
         self.genotype, other.genotype = GeneticOperator.crossover(self.genotype, other.genotype)
+        self.phenotype = self.translate()
+        other.phenotype = other.translate()
+        self.fitness = settings.FITNESS_FUNCTION(self.phenotype)
+        other.fitness = settings.FITNESS_FUNCTION(other.phenotype)
 
     def diversity(self, other):
         """
@@ -68,7 +76,7 @@ class Individual(object):
         String representation of this indiviudal"
         """
 
-        return "Individual[%d] (F:%.9f) %s" % (self.ID, self.fitness, self.translate())
+        return "Individual[%d] (F:%.5f) %s" % (self.ID, self.fitness, self.phenotype)
 
     def __repr__(self):
         """
@@ -92,17 +100,20 @@ class Population(object):
         """
 
         self._log = getLogger(__name__)
-        self._log.info('Generating a population of %d individuals with genome length %d' % (
-            population_size,
-            genome_length
-        ))
+        if settings.ENABLE_LOGGING:
+            self._log.info('Generating a population of %d individuals with genome length %d' % (
+                population_size,
+                genome_length
+            ))
         self.loop = evolution_loop
+        self.avg_fitness = 0.0
+        self.most_fit = None
 
         # Initialize a population size of given genome length as random values, and
         # round to nearest integer
-        self.individuals = set()
+        self.individuals = list()
         for i in range(population_size):
-            self.individuals.add(Individual(genome_length=genome_length))
+            self.individuals.append(Individual(genome_length=genome_length))
 
     def add_individual(self, individual):
         """
@@ -112,7 +123,7 @@ class Population(object):
 
         if individual not in self.individuals:
             if self.size < settings.MAX_POPULATION_SIZE:
-                self.individuals.add(individual)
+                self.individuals.append(individual)
             else:
                 self.individuals.remove(choice(sorted(list(self.individuals), key=lambda i: i.generation)[:5]))
 
@@ -125,14 +136,14 @@ class Population(object):
 
         diff = settings.MAX_POPULATION_SIZE - self.size - len(individuals)
         if diff > 0:
-            self.individuals.update(individuals)
+            self.individuals.extend(individuals)
         else:
             # Remove the oldest
             diff = abs(diff)
             for i in sorted(list(self.individuals), key=lambda x: x.generation)[:diff]:
                 self.individuals.remove(i)
             # Add the new ones
-            self.individuals.update(individuals)
+            self.individuals.extend(individuals)
 
     @property
     def size(self):
@@ -143,8 +154,7 @@ class Population(object):
 
         return len(self.individuals)
 
-    @property
-    def avg_fitness(self):
+    def update_fitness(self):
         """
         Returns the average fitness of the individuals in this population
         :return: The average fitness level as a floating point number
@@ -153,7 +163,18 @@ class Population(object):
         if self.size == 0:
             return 0
 
-        return sum(p.fitness for p in self.individuals) / self.size
+        tot_fitness = 0.0
+        most_fit = None
+        for i in self.individuals:
+            if not most_fit:
+                most_fit = i
+            if i.fitness > most_fit.fitness:
+                most_fit = i
+
+            tot_fitness += i.fitness
+
+        self.avg_fitness = tot_fitness / self.size
+        self.most_fit = most_fit
 
     def get_random_individual(self):
         """
@@ -162,16 +183,6 @@ class Population(object):
         """
 
         return choice(self.individuals)
-
-    def get_most_fit(self):
-        """
-        Returns the most fit individuals in the population
-        :return: The most fit individual
-        """
-
-        if self.individuals:
-            return max(self.individuals, key=lambda x: x.fitness)
-        return None
 
     def get_n_most_fit(self, n=5):
         """

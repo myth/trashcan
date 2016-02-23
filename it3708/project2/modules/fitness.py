@@ -15,9 +15,8 @@ class Fitness(object):
         :return: The fitness value of this phenotype (1 / SSE)
         """
 
-        solution = '1' * settings.ONEMAX_TARGET_LENGTH
-        shortest = min(len(phenotype), len(solution))
+        solution = settings.ONEMAX_SOLUTION
 
-        fitness = 1.0 / (1.0 + sum(phenotype[i] != solution[i] for i in range(shortest)))
+        fitness = 1.0 / (1.0 + sum(int(phenotype[i] != solution[i]) for i in range(settings.GENOME_LENGTH)))
 
         return fitness

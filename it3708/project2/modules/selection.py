@@ -23,7 +23,7 @@ class AbstractSelection(ABC):
             raise TypeError('Argument "evolution_loop" must be an instance of "EvolutionLoop"')
 
         self.loop = evolution_loop
-        self.pool = set()
+        self.pool = list()
 
 
 # Adult Selection
@@ -60,19 +60,20 @@ class FullGenerationalReplacement(AdultSelection):
         :return: This AdultSelection object, with an up to date pool
         """
 
-        logging.getLogger(__name__).debug('ChildPoolSize: %d, AdultPoolSize: %d' % (
-            self.loop.children.size,
-            self.loop.adults.size
-        ))
+        if settings.ENABLE_LOGGING:
+            logging.getLogger(__name__).debug('ChildPoolSize: %d, AdultPoolSize: %d' % (
+                self.loop.children.size,
+                self.loop.adults.size
+            ))
 
         self.loop.adults.individuals.clear()
         self.pool.clear()
-        self.pool.update(
-            set(list(self.loop.children.sorted())[:settings.ADULT_SELECTION_MU]))
+        self.pool.extend(self.loop.children.sorted()[:settings.MAX_POPULATION_SIZE])
 
-        logging.getLogger(__name__).debug('Transferring child pool of size %d to adult pool' % len(self.pool))
+        if settings.ENABLE_LOGGING:
+            logging.getLogger(__name__).debug('Transferring child pool of size %d to adult pool' % len(self.pool))
 
-        self.loop.adults.individuals.update(self.pool)
+        self.loop.adults.individuals.extend(self.pool)
         self.loop.children.individuals.clear()
 
         return self.pool
@@ -92,19 +93,20 @@ class OverProduction(AdultSelection):
         self.loop.adults.individuals.clear()
         num = 0
         for i in self.loop.children.sorted():
-            self.pool.add(i)
+            self.pool.append(i)
             num += 1
-            if num == settings.ADULT_SELECTION_MU:
+            if num == settings.MAX_POPULATION_SIZE:
                 break
-        self.loop.adults.individuals.update(self.pool)
+        self.loop.adults.individuals.extend(self.pool)
 
         # Log some information
-        logging.getLogger(__name__).debug(
-            '%d adults selected from child pool of %d' % (
-                len(self.pool),
-                self.loop.children.size
+        if settings.ENABLE_LOGGING:
+            logging.getLogger(__name__).debug(
+                '%d adults selected from child pool of %d' % (
+                    len(self.pool),
+                    self.loop.children.size
+                )
             )
-        )
 
         # Remove all children, as they are either grown up or dead
         self.loop.children.individuals.clear()
@@ -123,14 +125,14 @@ class GenerationalMixing(AdultSelection):
         """
 
         self.pool.clear()
-        self.pool.update(self.loop.children.individuals)
-        self.pool.update(self.loop.adults.individuals)
+        self.pool.extend(self.loop.children.individuals)
+        self.pool.extend(self.loop.adults.individuals)
         self.loop.adults.individuals.clear()
         num = 0
         for i in sorted(self.pool, key=lambda x: x.fitness, reverse=True):
-            self.loop.adults.individuals.add(i)
+            self.loop.adults.individuals.append(i)
             num += 1
-            if num == settings.ADULT_SELECTION_MU:
+            if num == settings.MAX_POPULATION_SIZE:
                 break
         self.loop.children.individuals.clear()
 
@@ -167,7 +169,7 @@ class FitnessProportionate(ParentSelection):
     """
 
     def select(self):
-        pass
+        log = logging.getLogger(__name__)
 
 
 class SigmaScaling(ParentSelection):
@@ -188,21 +190,24 @@ class TournamentSelection(ParentSelection):
 
     def select(self):
         self.pool.clear()
-        individuals = list(self.loop.adults.individuals)
+        individuals = self.loop.adults.individuals[:]
         random.shuffle(individuals)
         while individuals:
-            local_group = set()
+            local_group = list()
             for i in range(settings.TOURNAMENT_SELECTION_K):
                 try:
                     candidate = individuals.pop()
                 except IndexError:
                     break
-                local_group.add(candidate)
+                local_group.append(candidate)
 
             if random.random() < 1 - settings.TOURNAMENT_SELECTION_EPSILON:
                 winner = max(local_group, key=lambda x: x.fitness)
+            else:
+                winner = random.choice(list(local_group))
+            self.pool.append(winner)
+            if settings.ENABLE_LOGGING:
                 self.log.debug('Selected %s from local group for mating' % winner)
-                self.pool.add(winner)
 
         return self.pool
 
