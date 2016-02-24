@@ -44,6 +44,12 @@ class Individual(object):
             self.phenotype = self.translate()
             getLogger(__name__).debug('Mutation complete: %s' % self)
 
+        if random() < settings.GENOME_COMPONENT_MUTATION_RATE:
+            getLogger(__name__).debug('Component mutation occurring in %s' % self)
+            GeneticOperator.component_mutate(self.genotype)
+            self.phenotype = self.translate()
+            getLogger(__name__).debug('Component mutation complete: %s' % self)
+
     def crossover(self, other):
         """
         Performs a crossover operation
@@ -61,7 +67,11 @@ class Individual(object):
         if self is other:
             return 0
 
-        return sum(a != b for a in self.genotype for b in other.genotype) / len(self.genotype)
+        e = 0
+        for i, val in enumerate(self.genotype):
+            e += int(val == other.genotype[i])
+
+        return 1 / (1 + e)
 
     def translate(self):
         """
@@ -78,7 +88,7 @@ class Individual(object):
         String representation of this indiviudal"
         """
 
-        return "Individual[%d] (F:%.5f) %s" % (self.ID, self.fitness, self.phenotype)
+        return "Individual[%d] (F:%f) %s" % (self.ID, self.fitness, self.phenotype)
 
     def __repr__(self):
         """
@@ -143,7 +153,6 @@ class Population(object):
                 most_fit = i
             if i.fitness > most_fit.fitness:
                 most_fit = i
-
             tot_fitness += i.fitness
 
         self.avg_fitness = tot_fitness / self.size

@@ -50,7 +50,7 @@ class EvolutionLoop(object):
 
             # Print some stats
             if settings.ENABLE_LOGGING:
-                self._log.info('Mean: %.5f Std.Dev: %.5f' % (self.adults.avg_fitness, self.adults.std_dev))
+                self._log.info('Mean: %f Std.Dev: %f' % (self.adults.avg_fitness, self.adults.std_dev))
                 self._log.info('Most fit individual: %s' % self.adults.most_fit)
             # Do some statistics gathering
             self.results.append((self.__generation__, self.adults.avg_fitness, self.adults.std_dev))

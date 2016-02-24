@@ -2,7 +2,6 @@
 #
 # Created by 'myth' on 2/18/16
 
-import cProfile
 from logging import getLogger
 from logging.config import dictConfig
 from modules.evolution import EvolutionLoop
@@ -29,5 +28,4 @@ if __name__ == '__main__':
         log.info('Multi-run complete: %s' % results)
     else:
         el = EvolutionLoop()
-        for i in el.start():
-            print(i)
+        el.start()

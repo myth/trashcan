@@ -25,6 +25,19 @@ class GeneticOperator(object):
         genotype[pos] = int(not genotype[pos])
 
     @staticmethod
+    def component_mutate(genotype):
+        """
+        This genetic operator performs a component mutation on a genotype
+        :param genotype: A bit vector
+        """
+
+        from_point = random.randint(0, settings.GENOME_LENGTH)
+        to_point = random.randint(0, settings.GENOME_LENGTH)
+
+        for i in range(min(from_point, to_point), max(from_point, to_point)):
+            genotype[i] = int(not genotype[i])
+
+    @staticmethod
     def crossover(genotype_one, genotype_two):
         """
         This genetic operator performs crossover on a pair of genotypes
@@ -72,8 +85,20 @@ class Phenotype(object):
     def bitstring_phenotype(genotype):
         """
         Translates a genotype into a bitstring phenotype
-        :param genotype: A numpy bit array
+        :param genotype: A list of 0's and 1's
         :return: A phenotype represented as a string of bit values (0 or 1)
         """
 
         return ''.join(map(str, map(int, genotype)))
+
+    @staticmethod
+    def integer_sequence_phenotype(genotype):
+        """
+        Translates a genotype into a list of integers
+        :param genotype: A list of 0's and 1's
+        :return: A phenotype represented as a list of integer values
+        """
+
+        phenotype = []
+
+        return phenotype

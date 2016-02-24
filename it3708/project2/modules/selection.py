@@ -5,6 +5,7 @@
 from abc import abstractmethod, ABC
 from copy import deepcopy
 import logging
+import math
 from modules.evolution import EvolutionLoop
 from modules.population import Individual
 import random
@@ -93,7 +94,7 @@ class OverProduction(AdultSelection):
 
         self.pool.clear()
         self.loop.adults.individuals.clear()
-        self.loop.adults.individuals.extend(self.loop.children.sorted()[:settings.MAX_ADULT_POOL_SIZE / 2])
+        self.loop.adults.individuals.extend(self.loop.children.sorted()[:settings.MAX_ADULT_POOL_SIZE])
 
         # Log some information
         if settings.ENABLE_LOGGING:
@@ -289,10 +290,38 @@ class TournamentSelection(ParentSelection):
         self.reproduce(self.pool)
 
 
-class RankedDiversitySelection(ParentSelection):
+class BoltzmannSelection(ParentSelection):
     """
     Selects a set of individuals for reproduction
     """
 
     def select(self):
-        pass
+        self.pool.clear()
+        logging.getLogger(__name__).debug('Applying ranked diversity scaling')
+
+        # Do Rank space weighting
+        candidates = self.loop.adults.sorted()
+
+        # Do boltzmann
+        for i in candidates:
+            numerator = math.exp(i.fitness / (1 + settings.MAX_GENERATIONS - self.loop.generation))
+            denominator = math.exp(self.loop.results[i.generation][1] / (1 + settings.MAX_GENERATIONS - i.generation))
+            i.fitness *= numerator / denominator
+
+        tot_fitness = sum(i.fitness for i in candidates)
+        self.pool.append(candidates[0])
+        candidates.sort(key=lambda x: x.fitness, reverse=True)
+        while len(self.pool) < settings.MAX_CHILD_POOL_SIZE:
+            r = random.uniform(0, 1) * tot_fitness
+            i = 0
+            while r - candidates[i].fitness > 0:
+                r -= candidates[i].fitness
+                i += 1
+
+            # Check that we cannot add the same parent twice
+            if candidates[i] is self.pool[-1]:
+                continue
+
+            self.pool.append(candidates[i])
+
+        self.reproduce(self.pool)
