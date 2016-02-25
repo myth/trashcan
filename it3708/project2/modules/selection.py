@@ -7,7 +7,8 @@ from copy import deepcopy
 import logging
 import math
 from modules.evolution import EvolutionLoop
-from modules.population import Individual
+from modules.fitness import Fitness
+from modules.population import Individual, IntIndividual
 import random
 import settings
 
@@ -171,6 +172,10 @@ class ParentSelection(AbstractSelection):
         NB: Asssumes even numbered list of parents that is of size settings.MAX_CHILD_SIZE_POOL
         """
 
+        individual_class = Individual
+        if settings.FITNESS_FUNCTION is Fitness.surprising_sequence:
+            individual_class = IntIndividual
+
         parents = parents[:]
         self.pool.clear()
         self.loop.children.individuals.clear()
@@ -179,12 +184,12 @@ class ParentSelection(AbstractSelection):
         while parents:
             # Parent clone 1
             p1 = parents.pop()
-            c1 = Individual(genotype=deepcopy(p1.genotype), generation=p1.generation + 1)
+            c1 = individual_class(genotype=deepcopy(p1.genotype), generation=p1.generation + 1)
             self.loop.children.individuals.append(c1)
 
             # Parent clone 2
             p2 = parents.pop()
-            c2 = Individual(genotype=deepcopy(p2.genotype), generation=p2.generation + 1)
+            c2 = individual_class(genotype=deepcopy(p2.genotype), generation=p2.generation + 1)
             self.loop.children.individuals.append(c2)
 
             # Crossover clones as children

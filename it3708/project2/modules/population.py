@@ -2,12 +2,14 @@
 #
 # Created by 'myth' on 2/19/16
 
+from copy import deepcopy
 import itertools
 from logging import getLogger
+from modules.fitness import Fitness
 from modules.operators import GeneticOperator
 from modules.operators import Phenotype
 import numpy as np
-from random import choice, random
+from random import choice, random, randint
 import settings
 
 
@@ -28,7 +30,7 @@ class Individual(object):
             self.genotype = np.random.random_integers(0, 1, genome_length)
             self.genotype = [int(i) for i in self.genotype]
         else:
-            self.genotype = genotype
+            self.genotype = genotype[:]
         self.generation = generation
         self.fitness = 0.0
         self.phenotype = self.translate()
@@ -39,16 +41,12 @@ class Individual(object):
         """
 
         if random() < settings.GENOME_MUTATION_RATE:
-            getLogger(__name__).debug('Mutation occurring in %s' % self)
             GeneticOperator.mutate(self.genotype)
             self.phenotype = self.translate()
-            getLogger(__name__).debug('Mutation complete: %s' % self)
 
         if random() < settings.GENOME_COMPONENT_MUTATION_RATE:
-            getLogger(__name__).debug('Component mutation occurring in %s' % self)
             GeneticOperator.component_mutate(self.genotype)
             self.phenotype = self.translate()
-            getLogger(__name__).debug('Component mutation complete: %s' % self)
 
     def crossover(self, other):
         """
@@ -98,6 +96,33 @@ class Individual(object):
         return self.__str__()
 
 
+class IntIndividual(Individual):
+    def __init__(self, genotype=None, generation=0):
+        if genotype:
+            super(IntIndividual, self).__init__(
+                genotype=deepcopy(genotype),
+                generation=generation
+            )
+        else:
+            super(IntIndividual, self).__init__(
+                genotype=[randint(0, settings.SURPRISING_SEQUENCE_S - 1) for i in range(settings.GENOME_LENGTH)]
+            )
+
+    def mutate(self):
+        if random() < settings.GENOME_MUTATION_RATE:
+            GeneticOperator.int_mutate(self.genotype, m=settings.SURPRISING_SEQUENCE_S)
+            self.phenotype = self.translate()
+
+        if random() < settings.GENOME_COMPONENT_MUTATION_RATE:
+            GeneticOperator.int_component_mutate(self.genotype, m=settings.SURPRISING_SEQUENCE_S)
+            self.phenotype = self.translate()
+
+    def crossover(self, other):
+        self.genotype, other.genotype = GeneticOperator.crossover(self.genotype, other.genotype)
+        self.translate()
+        other.translate()
+
+
 class Population(object):
     """
     A population of genotypes
@@ -126,7 +151,10 @@ class Population(object):
         # round to nearest integer
         self.individuals = list()
         for i in range(population_size):
-            self.individuals.append(Individual(genome_length=genome_length))
+            if settings.FITNESS_FUNCTION is Fitness.surprising_sequence:
+                self.individuals.append(IntIndividual())
+            else:
+                self.individuals.append(Individual(genome_length=genome_length))
 
     @property
     def size(self):

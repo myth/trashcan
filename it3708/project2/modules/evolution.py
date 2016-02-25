@@ -53,7 +53,9 @@ class EvolutionLoop(object):
                 self._log.info('Mean: %f Std.Dev: %f' % (self.adults.avg_fitness, self.adults.std_dev))
                 self._log.info('Most fit individual: %s' % self.adults.most_fit)
             # Do some statistics gathering
-            self.results.append((self.__generation__, self.adults.avg_fitness, self.adults.std_dev))
+            self.results.append(
+                (self.__generation__, self.adults.avg_fitness, self.adults.std_dev, self.adults.most_fit.fitness)
+            )
 
             # If we have found a solution at this point, (i.e fitness 1.0), just terminate
             if self.adults.most_fit and self.adults.most_fit.fitness == 1.0:

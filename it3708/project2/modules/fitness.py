@@ -12,11 +12,11 @@ class Fitness(object):
         """
         OneMax problem fitness function
         :param phenotype: The phenotype representation of a primitive genotype (Bitstring)
-        :return: The fitness value of this phenotype (1 / SSE)
+        :return: The fitness value of this phenotype (correct / optimal)
         """
 
         solution = settings.ONEMAX_SOLUTION
-        fitness = 1.0 / (1.0 + sum(phenotype[i] != solution[i] for i in range(settings.GENOME_LENGTH)))
+        fitness = 1 / (1 + sum(phenotype[i] != solution[i] for i in range(settings.GENOME_LENGTH)))
 
         return fitness
 
@@ -35,7 +35,7 @@ class Fitness(object):
             if phenotype[i] == prev:
                 if phenotype[i] == '1':
                     fitness += 1
-                elif phenotype[i] == '0' and i < z:
+                elif phenotype[i] == '0' and i < z:  # if we are on a 0-streak, check for Z boundary
                     fitness += 1
                 else:
                     break
@@ -46,25 +46,18 @@ class Fitness(object):
         return fitness / settings.GENOME_LENGTH
 
     @staticmethod
-    def local_surprising_sequence(phenotype):
+    def surprising_sequence(phenotype):
         """
         Locally surprising sequence fitness function
         :param phenotype: A phenotype representation of a primitive genotype (bitstring)
         :return: The fitness value of this phenotype
         """
 
-        fitness = 0.0
+        local = settings.SURPRISING_SEQUENCE_LOCAL
+        p = phenotype
+        l = len(p)
 
-        return fitness
+        # Produce a list of AXB string triplets representing local or global sequences in the provided phenotype
+        seq = ['%d-%d-%d' % (p[a], b-a, p[b]) for a in range(0, l) for b in range(a + 1, min(a + 2, l) if local else l)]
 
-    @staticmethod
-    def global_surprising_sequence(phenotype):
-        """
-        Globally surprising sequence fitness function
-        :param phenotype: A phenotype representation of a primitive genotype (bitstring)
-        :return: The fitness value of this phenotype
-        """
-
-        fitness = 0.0
-
-        return fitness
+        return len(set(seq)) / len(seq)

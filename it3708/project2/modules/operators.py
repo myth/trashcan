@@ -2,7 +2,6 @@
 #
 # Created by 'myth' on 2/19/16
 
-import logging
 import random
 import settings
 
@@ -17,11 +16,6 @@ class GeneticOperator(object):
         """
 
         pos = random.randint(0, settings.GENOME_LENGTH - 1)
-        logging.getLogger(__name__).debug('Mutation occurred in pos %d from %d to %d' % (
-            pos,
-            genotype[pos],
-            int(not genotype[pos])
-        ))
         genotype[pos] = int(not genotype[pos])
 
     @staticmethod
@@ -31,11 +25,30 @@ class GeneticOperator(object):
         :param genotype: A bit vector
         """
 
-        from_point = random.randint(0, settings.GENOME_LENGTH)
-        to_point = random.randint(0, settings.GENOME_LENGTH)
+        from_point = random.randint(0, settings.GENOME_LENGTH - 1)
+        to_point = random.randint(1, settings.GENOME_LENGTH)
 
         for i in range(min(from_point, to_point), max(from_point, to_point)):
             genotype[i] = int(not genotype[i])
+
+    @staticmethod
+    def int_mutate(genotype, m=1):
+        for i in range(random.randint(1, settings.GENOME_MUTATION_INTENSITY)):
+            pos = random.randint(0, settings.GENOME_LENGTH - 1)
+            genotype[pos] = random.randint(0, m - 1)
+
+    @staticmethod
+    def int_component_mutate(genotype, m=1):
+        from_point = random.randint(0, settings.GENOME_LENGTH - 1)
+        to_point = random.randint(1, settings.GENOME_LENGTH)
+
+        for i in range(min(from_point, to_point), max(from_point, to_point)):
+            genotype[i] = random.randint(0, m - 1)
+
+    @staticmethod
+    def simple_int_crossover(genotype_one, genotype_two):
+        s = random.randint(0, len(genotype_one))
+        return genotype_one[:s] + genotype_two[s:], genotype_two[:s], genotype_one[s:]
 
     @staticmethod
     def crossover(genotype_one, genotype_two):
@@ -92,13 +105,20 @@ class Phenotype(object):
         return ''.join(map(str, map(int, genotype)))
 
     @staticmethod
-    def integer_sequence_phenotype(genotype):
+    def integer_bitstring_phenotype(genotype):
         """
         Translates a genotype into a list of integers
         :param genotype: A list of 0's and 1's
         :return: A phenotype represented as a list of integer values
         """
 
+        bitstring_ptype = Phenotype.bitstring_phenotype(genotype)
         phenotype = []
+        for i in range(0, settings.GENOME_LENGTH, 6):
+            phenotype.append(int(bitstring_ptype[i:i+6], 2) % settings.SURPRISING_SEQUENCE_S)
 
         return phenotype
+
+    @staticmethod
+    def integer_sequence_phenotype(genotype):
+        return genotype[:]
