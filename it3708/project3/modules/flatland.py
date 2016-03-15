@@ -40,6 +40,12 @@ class FlatLand(object):
         self.num_poison = self.original_num_poison
 
     def move(self, direction):
+        """
+        Perform a move in the given direction
+        :param direction: An (x, y) direction tuple
+        :return: The value of the cell at position self.x, self.y + direction
+        """
+
         self.set(self.x, self.y, EMPTY)
         x, y = self._correct_out_of_bounds(direction)
         item = self.get(x, y)
@@ -56,21 +62,46 @@ class FlatLand(object):
         return item
 
     def peek(self, direction):
+        """
+        Peek at the value in the given direction
+        :param direction: An (x, y) direction tuple
+        :return: The value at position self.x, self.y + direction
+        """
         x, y = self._correct_out_of_bounds(direction)
         item = self.get(x, y)
 
         return item
 
     def get(self, x, y):
+        """
+        Get the value of the cell at coordinate x, y
+        :param x: X coordinate
+        :param y: Y coordinate
+        :return: The value of cell (x, y)
+        """
         return self.board[y][x]
 
     def set(self, x, y, val=PLAYER):
+        """
+        Set the value of cell (x, y) to val
+        :param x: X coordinate
+        :param y: Y coordinate
+        :param val: The new value for the cell
+        """
         self.board[y][x] = val
 
     def _get_num_food(self):
+        """
+        Count the number of food objects left on the board
+        :return: The amount of food on the board
+        """
         return sum(len(list(filter(lambda x: x == FOOD, row))) for row in self.board)
 
     def _get_num_poison(self):
+        """
+        Count the number of poison objects left on the board
+        :return: The amount of poison on the board
+        """
         return sum(len(list(filter(lambda x: x == POISON, row))) for row in self.board)
 
     def _init_board(self):
@@ -132,15 +163,30 @@ class Agent(object):
 
     @property
     def direction(self):
+        """
+        Get the current direction
+        :return: An (x, y) direction tuple
+        """
+
         return DIRECTIONS[self._dir_index]
 
     def forward(self):
+        """
+        Perform a move in the current direction
+        :return: The value of the cell that was currently moved to
+        """
+
         item = self.flatland.move(self.direction)
         self._update_fitness(item)
 
         return item
 
     def left(self):
+        """
+        Perform a rotation to the left and move forward
+        :return: The value of the cell that was currently moved to
+        """
+
         self._dir_index = self._rotate(-1)
         item = self.flatland.move(self.direction)
         self._update_fitness(item)
@@ -148,6 +194,10 @@ class Agent(object):
         return item
 
     def right(self):
+        """
+        Perform a rotation to the right and move forward
+        :return: The value of the cell that was currently moved to
+        """
         self._dir_index = self._rotate(1)
         item = self.flatland.move(self.direction)
         self._update_fitness(item)
@@ -155,7 +205,13 @@ class Agent(object):
         return item
 
     def sense(self):
-        forward = self.flatland.peek(UP)
+        """
+        Perform a peek operation at the current direction, to the left of current and right of current
+        :return: A list of length 6 that contains the truth value of food in each of the 3 directions,
+        followed by the truth value of poison in each of the 3 directions.
+        """
+
+        forward = self.flatland.peek(self.direction)
         left = self.flatland.peek(LEFT)
         right = self.flatland.peek(RIGHT)
 
@@ -171,6 +227,10 @@ class Agent(object):
         return ay
 
     def reset(self):
+        """
+        Reset the state of this Agent, and spawn a new random FlatLand instance
+        """
+
         self.flatland = FlatLand()
         self.stats = {
             FOOD: 0,
@@ -179,16 +239,14 @@ class Agent(object):
         self.fitness = 0
         self._dir_index = 0
 
-    def _make_move(self, direction):
-            if direction == UP:
-                self.forward()
-            elif direction == LEFT:
-                self.left()
-            else:
-                self.right()
+    def _rotate(self, i):
+        """
+        Get the direction index of a direction of a rotation to the left (-1) or right (1)
+        :param i: The rotation value
+        :return: A direction index pointing to the correct direction in the DIRECTION list
+        """
 
-    @staticmethod
-    def _rotate(i):
+        i += self._dir_index
         if i > 3:
             return 0
         if i < 0:
@@ -196,6 +254,11 @@ class Agent(object):
         return i
 
     def _update_fitness(self, item):
+        """
+        Update the stats and fitness of this agent
+        :param item: The item that was consumed (cell value from board)
+        """
+        
         if item in (FOOD, POISON):
             self.stats[item] += 1
             self.fitness = self.stats[FOOD] / self.flatland.original_num_food
