@@ -8,8 +8,10 @@ from copy import deepcopy
 import numpy as np
 from modules.flatland import (DOWN, EMPTY, FOOD, LEFT, PLAYER, POISON, RIGHT,
                               UP, Agent, FlatLand)
+from modules.nnet import Layer, NeuralNetwork
 from settings import AGENT_START_LOCATION, FLATLAND_COLS, FLATLAND_ROWS
 
+# FlatLand
 BOARD = np.array([
     [1,  0, 10, 10,  0,  0,  1, 10,  0, 10],
     [0,  1, 10,  0,  0,  0, 10,  0,  0, 10],
@@ -22,6 +24,9 @@ BOARD = np.array([
     [10,  0,  0,  0,  0,  1, 42,  0,  1, 10],
     [0,  0, 10,  1,  0,  0, 10, 10, 10,  0]
 ])
+
+# NeuralNetwork
+WEIGHTS = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
 
 class FlatLandTest(unittest.TestCase):
@@ -181,8 +186,203 @@ class AgentTest(unittest.TestCase):
     def testInit(self):
         a = Agent()
         fl = FlatLand()
-        a = Agent(fl)
-        self.assertTrue(a.flatland is fl)
+        b = Agent(fl)
+        self.assertTrue(a.flatland is not b.flatland)
+        self.assertTrue(b.flatland is fl)
         self.assertEqual(self.agent.stats[FOOD], 0)
         self.assertEqual(self.agent.stats[POISON], 0)
         self.assertEqual(self.agent.fitness, 0)
+
+    def testRotate(self):
+        self.agent._dir_index = 0
+        self.assertEqual(self.agent._rotate(-1), 3)
+        self.assertEqual(self.agent._rotate(1), 1)
+        self.assertEqual(self.agent._rotate(4), 0)
+        self.assertEqual(self.agent._rotate(-4), 0)
+        self.assertEqual(self.agent._rotate(5), 1)
+        self.assertEqual(self.agent._rotate(-5), 3)
+
+    def testDirection(self):
+        self.assertEqual(self.agent.direction, UP)
+        self.agent.forward()
+        self.assertEqual(self.agent.direction, UP)
+        self.agent.right()
+        self.assertEqual(self.agent.direction, RIGHT)
+        self.agent.right()
+        self.assertEqual(self.agent.direction, DOWN)
+        self.agent.left()
+        self.assertEqual(self.agent.direction, RIGHT)
+        self.agent.forward()
+
+    def testPosition(self):
+        fl = (self.agent.flatland.x, self.agent.flatland.y)
+        a = self.agent.position
+
+        self.assertEqual(fl, a)
+        self.agent.flatland.x = 3
+        self.agent.flatland.y = 2
+
+        fl = (self.agent.flatland.x, self.agent.flatland.y)
+        a = self.agent.position
+
+        self.assertEqual(fl, a)
+
+    def testForward(self):
+        print(self.agent.flatland.board)
+
+        direction = self.agent.direction
+        self.agent.forward()
+        self.assertEqual(self.agent.flatland.get(*self.agent.position), PLAYER)
+        self.assertEqual(self.agent.direction, direction)
+
+        x, y = self.agent.position
+        ox, oy = AGENT_START_LOCATION
+        mx, my = direction
+        self.assertEqual((x, y), (ox + mx, oy + my))
+
+        print(self.agent.flatland.board)
+
+        self.agent._dir_index = 1
+
+        x, y = self.agent.position
+        ox, oy = AGENT_START_LOCATION
+        mx, my = direction
+        self.assertEqual((x, y), (ox + mx, oy + my))
+
+        print(self.agent.flatland.board)
+
+    def testLeft(self):
+        print(self.agent.flatland.board)
+
+        self.agent.left()
+        self.assertEqual(self.agent.flatland.get(*self.agent.position), PLAYER)
+        self.assertEqual(self.agent.direction, LEFT)
+
+        x, y = self.agent.position
+        ox, oy = AGENT_START_LOCATION
+        mx, my = LEFT
+        self.assertEqual((x, y), (ox + mx, oy + my))
+
+        print(self.agent.flatland.board)
+
+        self.agent.left()
+        ox, oy = x, y
+        x, y = self.agent.position
+        mx, my = DOWN
+        self.assertEqual((x, y), (ox + mx, oy + my))
+
+        print(self.agent.flatland.board)
+
+    def testRight(self):
+        print(self.agent.flatland.board)
+
+        self.agent.right()
+        self.assertEqual(self.agent.flatland.get(*self.agent.position), PLAYER)
+        self.assertEqual(self.agent.direction, RIGHT)
+
+        x, y = self.agent.position
+        ox, oy = AGENT_START_LOCATION
+        mx, my = RIGHT
+        self.assertEqual((x, y), (ox + mx, oy + my))
+
+        print(self.agent.flatland.board)
+
+        self.agent.right()
+        ox, oy = x, y
+        x, y = self.agent.position
+        mx, my = DOWN
+        self.assertEqual((x, y), (ox + mx, oy + my))
+
+        print(self.agent.flatland.board)
+
+    def testSense(self):
+        print(self.agent.flatland.board)
+        sensed = self.agent.sense()
+        expected = [0, 0, 0, 1, 1, 0]
+
+        self.assertEqual(expected, sensed)
+
+        self.agent.right()
+        print(self.agent.flatland.board)
+
+        sensed = self.agent.sense()
+        expected = [0, 1, 1, 1, 0, 0]
+
+        self.assertEqual(expected, sensed)
+
+        # Reset back to direction UP, move to top-left corner
+        self.agent._dir_index = 0
+        self.agent.flatland.x = 0
+        self.agent.flatland.y = 0
+        self.agent.flatland.set(0, 0)
+
+        sensed = self.agent.sense()
+        expected = [0, 1, 0, 0, 0, 0]
+
+        self.assertEqual(expected, sensed)
+
+        # Move to bottom-right corner
+        self.agent.flatland.x = FLATLAND_COLS - 1
+        self.agent.flatland.y = FLATLAND_ROWS - 1
+        self.agent.flatland.set(0, 0)
+
+        sensed = self.agent.sense()
+        expected = [1, 1, 0, 0, 0, 0]
+
+        self.assertEqual(expected, sensed)
+
+    def testUpdateFitness(self):
+        print(self.agent.flatland.board)
+        self.agent.forward()
+
+        expected = 1 / 31
+        expected /= 2
+
+        self.assertEqual(self.agent.fitness, expected)
+        self.assertEqual(self.agent.stats[POISON], 1)
+        self.assertEqual(self.agent.stats[FOOD], 0)
+
+        self.agent.right()
+
+        expected = 2 / 31
+        expected /= 2
+        self.assertEqual(self.agent.stats[POISON], 1)
+        self.assertEqual(self.agent.stats[FOOD], 1)
+
+        self.assertEqual(self.agent.fitness, expected)
+
+        self.agent.left()
+
+        expected = 2 / 31
+        expected /= 3
+        self.assertEqual(self.agent.stats[POISON], 2)
+        self.assertEqual(self.agent.stats[FOOD], 1)
+
+        self.assertEqual(self.agent.fitness, expected)
+
+
+class LayerTest(unittest.TestCase):
+
+    def setUp(self):
+        self.layer = Layer(10, weights=WEIGHTS)
+
+    def testFire(self):
+        inputs = [1, 0, 0, 1, 0, 0]
+        print(self.layer.tensor)
+        self.layer.fire(inputs)
+        print(self.layer.tensor)
+
+        # Check 4 decimal places
+        for x, y in zip(self.layer.tensor, [.3333] * 10):
+            self.assertAlmostEqual(x, y, 4)
+
+        self.layer.weights = np.array([-0.5] * 10, dtype='float')
+        self.layer.fire(inputs)
+
+        self.assertEqual(list(self.layer.tensor), [0] * 10)
+
+
+class NeuralNetworkTest(unittest.TestCase):
+
+    def setUp(self):
+        self.agent = Agent(FlatLand(preset=deepcopy(BOARD)))

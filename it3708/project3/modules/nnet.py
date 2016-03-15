@@ -4,11 +4,9 @@
 
 import logging
 import math
-import random
 
 import numpy as np
 import settings
-from modules.flatland import LEFT, RIGHT, UP
 
 
 class ActivationFunction(object):
@@ -46,7 +44,7 @@ class Layer(object):
     The Layer contains a weight tensor, activation function and helper methods for processing layer data
     """
 
-    def __init__(self, nodes, activation_function=ActivationFunction.relu):
+    def __init__(self, nodes, activation_function=ActivationFunction.relu, weights=None):
         """
         Construct a Layer of N nodes, and an optional input reference
         :param nodes: The number of nodes in the layer
@@ -54,25 +52,34 @@ class Layer(object):
         """
 
         self.tensor = np.zeros(nodes, dtype='float')
-        self.weights = np.random.uniform(-.5, .5, nodes)
+
+        # Add weight presets of we have them provided, otherwise uniform random from -0.5 to 0.5
+        if weights is not None:
+            self.weights = weights
+        else:
+            self.weights = np.random.uniform(-.5, .5, nodes)
+
+        # Only softmax is a array-wide function
         if activation_function is ActivationFunction.softmax:
             self.af = activation_function
         else:
             self.af = np.vectorize(activation_function)
 
-    def fire(self, tensor):
+    def fire(self, incoming):
         """
         Fire signals
         """
 
-        # If we are the input layer
-        for i in range(len(self.tensor)):
-            self.tensor[i] = tensor.sum() * self.weights[i]
+        if not isinstance(incoming, np.ndarray):
+            incoming = np.array(incoming)
 
-        tot = self.tensor.sum()
-        if tot:
-            self.tensor /= self.tensor.sum()
+        # Set value of each node as the weighted average of all incoming signals
+        for i in range(len(self.tensor)):
+            self.tensor[i] = (incoming.sum() / len(incoming)) * self.weights[i]
+
         self.tensor = self.af(self.tensor)
+
+        return self.tensor
 
 
 class NeuralNetwork(object):
@@ -104,48 +111,14 @@ class NeuralNetwork(object):
             self._net.append(Layer(structure.pop(0), activation_function=activation_functions.pop(0)))
         self._net.append(Layer(outputs, outputs_af))
 
-    def send(self, inputs):
+    def test(self, inputs):
         """
-        Send a signal of inputs through the layers
-        :param inputs: A list of input values
-        :return: A list of output values (the value of the last layer's tensor field)
+        Test the output of
         """
 
-        inputs = np.array(inputs, dtype='float')
-        for i, layer in enumerate(self._net):
-            layer.fire(inputs)
-            inputs = layer.tensor
+        self._send_signal(inputs)
 
-    def test(self, agent, timesteps=None, record_run=False):
-        """
-        Train the network for N epochs
-        """
-
-        def run_test():
-            if record_run:
-                print(agent.flatland.board)
-            for t in range(timesteps):
-                results = agent.sense()
-                direction = [UP, LEFT, RIGHT]
-
-                inputs = np.array(results, dtype='float')
-                for i, layer in enumerate(self._net):
-                    layer.fire(inputs)
-                    inputs = layer.tensor
-                if record_run:
-                    print(self._output)
-                d = direction[np.argmax(self._output)]
-
-                if record_run:
-                    print(d)
-                    print(agent.flatland.board)
-
-                agent.move(d)
-
-        if not timesteps:
-            timesteps = settings.DEFAULT_TRAIN_TIMESTEPS
-
-        run_test()
+        return self._output
 
     def set_weights(self, weights):
         """
@@ -165,3 +138,15 @@ class NeuralNetwork(object):
     @property
     def _output(self):
         return self._net[-1].tensor
+
+    def _send_signal(self, inputs):
+        """
+        Send a signal of inputs through the layers
+        :param inputs: A list of input values
+        :return: A list of output values (the value of the last layer's tensor field)
+        """
+
+        inputs = np.array(inputs, dtype='float')
+        for i, layer in enumerate(self._net):
+            layer.fire(inputs)
+            inputs = layer.tensor

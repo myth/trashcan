@@ -193,6 +193,15 @@ class Agent(object):
 
         return item
 
+    @property
+    def position(self):
+        """
+        Return the position of this Agent
+        :return: An (x, y) coordinate tuple
+        """
+
+        return self.flatland.x, self.flatland.y
+
     def right(self):
         """
         Perform a rotation to the right and move forward
@@ -212,8 +221,8 @@ class Agent(object):
         """
 
         forward = self.flatland.peek(self.direction)
-        left = self.flatland.peek(LEFT)
-        right = self.flatland.peek(RIGHT)
+        left = self.flatland.peek(DIRECTIONS[self._rotate(-1)])
+        right = self.flatland.peek(DIRECTIONS[self._rotate(1)])
 
         ay = [
             float(forward == FOOD),
@@ -246,12 +255,7 @@ class Agent(object):
         :return: A direction index pointing to the correct direction in the DIRECTION list
         """
 
-        i += self._dir_index
-        if i > 3:
-            return 0
-        if i < 0:
-            return 3
-        return i
+        return (self._dir_index + i) % 4
 
     def _update_fitness(self, item):
         """
@@ -261,5 +265,5 @@ class Agent(object):
         
         if item in (FOOD, POISON):
             self.stats[item] += 1
-            self.fitness = self.stats[FOOD] / self.flatland.original_num_food
-            self.fitness /= self.stats[POISON] * settings.AGENT_POISON_PENALTY_FACTOR
+            self.fitness = (1 + self.stats[FOOD]) / (self.flatland.original_num_food + 1)
+            self.fitness /= 1 + (self.stats[POISON] * settings.AGENT_POISON_PENALTY_FACTOR)
