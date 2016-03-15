@@ -2,10 +2,11 @@
 #
 # Created by 'myth' on 2/18/16
 
+import os
+
 from modules.fitness import Fitness
 from modules.operators import Phenotype
 from modules.selection import *
-import os
 
 # -----------------------------------
 # SETTINGS

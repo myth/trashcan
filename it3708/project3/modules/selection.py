@@ -2,15 +2,16 @@
 #
 # Created by 'myth' on 2/21/16
 
-from abc import abstractmethod, ABC
-from copy import deepcopy
 import logging
 import math
+import random
+from abc import ABC, abstractmethod
+from copy import deepcopy
+
+import settings
 from modules.evolution import EvolutionLoop
 from modules.fitness import Fitness
-from modules.population import Individual, IntIndividual
-import random
-import settings
+from modules.population import AgentIndividual, Individual, IntIndividual
 
 
 class AbstractSelection(ABC):
@@ -175,6 +176,8 @@ class ParentSelection(AbstractSelection):
         individual_class = Individual
         if settings.FITNESS_FUNCTION is Fitness.surprising_sequence:
             individual_class = IntIndividual
+        elif settings.FITNESS_FUNCTION is Fitness.flatland_agent:
+            individual_class = AgentIndividual
 
         parents = parents[:]
         self.pool.clear()
@@ -186,15 +189,24 @@ class ParentSelection(AbstractSelection):
             p1 = parents.pop()
             c1 = individual_class(genotype=deepcopy(p1.genotype), generation=p1.generation + 1)
             self.loop.children.individuals.append(c1)
+            if settings.FITNESS_FUNCTION is Fitness.flatland_agent:
+                c1.agent.flatland = deepcopy(p1.agent.flatland)
 
             # Parent clone 2
             p2 = parents.pop()
             c2 = individual_class(genotype=deepcopy(p2.genotype), generation=p2.generation + 1)
             self.loop.children.individuals.append(c2)
+            if settings.FITNESS_FUNCTION is Fitness.flatland_agent:
+                c2.agent.flatland = deepcopy(p2.agent.flatland)
 
             # Crossover clones as children
             if random.random() < settings.GENOME_CROSSOVER_RATE:
                 c1.crossover(c2)
+
+            p1.agent.reset()
+            p2.agent.reset()
+            c1.agent.reset()
+            c2.agent.reset()
 
 
 class FitnessProportionate(ParentSelection):

@@ -3,8 +3,11 @@
 # Created by 'myth' on 2/19/16
 
 from logging import getLogger
-from modules.population import Population
+
 import settings
+from modules.flatland import FOOD, POISON, FlatLand
+from modules.nnet import NeuralNetwork
+from modules.population import Population
 
 
 class EvolutionLoop(object):
@@ -57,12 +60,6 @@ class EvolutionLoop(object):
                 (self.__generation__, self.adults.avg_fitness, self.adults.std_dev, self.adults.most_fit.fitness)
             )
 
-            # If we have found a solution at this point, (i.e fitness 1.0), just terminate
-            if self.adults.most_fit and self.adults.most_fit.fitness == 1.0:
-                if settings.ENABLE_LOGGING:
-                    self._log.info('Success! Found solution: %s' % self.adults.most_fit)
-                break
-
             # Adult phase
             self._apply_parent_selection()
             self._apply_mutations(self.adults.individuals)
@@ -71,6 +68,15 @@ class EvolutionLoop(object):
             # Check if we have reached our limit
             if self.__generation__ >= settings.MAX_GENERATIONS:
                 self.stop()
+
+        agent = self.adults.most_fit.agent
+        agent.flatland = FlatLand()
+        nn = NeuralNetwork()
+        nn.set_weights(self.adults.most_fit.phenotype)
+
+        nn.test(agent, timesteps=settings.DEFAULT_TRAIN_TIMESTEPS, record_run=True)
+        print('FOOD: %d' % agent.stats[FOOD])
+        print('POISON: %d' % agent.stats[POISON])
 
         return self.results
 

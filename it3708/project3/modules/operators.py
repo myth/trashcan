@@ -3,6 +3,8 @@
 # Created by 'myth' on 2/19/16
 
 import random
+
+import numpy as np
 import settings
 
 
@@ -122,3 +124,25 @@ class Phenotype(object):
     @staticmethod
     def integer_sequence_phenotype(genotype):
         return genotype[:]
+
+    @staticmethod
+    def nnet_weight_tensor(genotype):
+        """
+        Translate the genotype into the weight tensors needed by the neural network
+        :param genotype: An int vector representingeach weight node in all the layers
+        :return: An array of weights equal in length to the total amount of nodes
+        """
+
+        weights = []
+        layers = settings.NETWORK_STRUCTURE.copy()
+
+        start = 0
+        while layers:
+            layer = np.array(genotype[start:layers.pop(0)], dtype='float')
+            size = len(layer)
+            layer -= int(size / 2)
+            avg = layer.sum() / size
+            layer /= avg + 0.01
+            weights.append(layer)
+
+        return weights

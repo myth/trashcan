@@ -2,15 +2,16 @@
 #
 # Created by 'myth' on 2/19/16
 
-from copy import deepcopy
 import itertools
+from copy import deepcopy
 from logging import getLogger
-from modules.fitness import Fitness
-from modules.operators import GeneticOperator
-from modules.operators import Phenotype
+from random import choice, randint, random
+
 import numpy as np
-from random import choice, random, randint
 import settings
+from modules.fitness import Fitness
+from modules.flatland import Agent, FlatLand
+from modules.operators import GeneticOperator, Phenotype
 
 
 class Individual(object):
@@ -123,6 +124,43 @@ class IntIndividual(Individual):
         other.translate()
 
 
+class AgentIndividual(IntIndividual):
+    """
+    Individual connected to an agent, which in turn is tested through a neural network
+    """
+
+    def __init__(self, genotype=None, generation=0):
+        self.agent = Agent(FlatLand())
+        if genotype:
+            super(AgentIndividual, self).__init__(
+                genotype=deepcopy(genotype),
+                generation=generation
+            )
+        else:
+            super(AgentIndividual, self).__init__(
+                genotype=[randint(0, settings.WEIGHT_GRANULARITY - 1) for i in range(settings.GENOME_LENGTH)]
+            )
+
+    def mutate(self):
+        if random() < settings.GENOME_MUTATION_RATE:
+            GeneticOperator.int_mutate(self.genotype, m=settings.WEIGHT_GRANULARITY)
+            self.phenotype = self.translate()
+
+        if random() < settings.GENOME_COMPONENT_MUTATION_RATE:
+            GeneticOperator.int_component_mutate(self.genotype, m=settings.WEIGHT_GRANULARITY)
+            self.phenotype = self.translate()
+
+    def translate(self):
+        """
+        Translates this individual's genotype into a phenotype representation
+        """
+
+        self.phenotype = Phenotype.translate_genotype_to_phenotype(self.genotype)
+        self.fitness = settings.FITNESS_FUNCTION(self.phenotype, self.agent)
+
+        return self.phenotype
+
+
 class Population(object):
     """
     A population of genotypes
@@ -153,6 +191,8 @@ class Population(object):
         for i in range(population_size):
             if settings.FITNESS_FUNCTION is Fitness.surprising_sequence:
                 self.individuals.append(IntIndividual())
+            elif settings.FITNESS_FUNCTION is Fitness.flatland_agent:
+                self.individuals.append(AgentIndividual())
             else:
                 self.individuals.append(Individual(genome_length=genome_length))
 

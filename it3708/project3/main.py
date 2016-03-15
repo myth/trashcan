@@ -4,11 +4,13 @@
 
 from logging import getLogger
 from logging.config import dictConfig
-from modules.evolution import EvolutionLoop
-import settings
+
 import matplotlib
-matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
+import settings
+from modules.evolution import EvolutionLoop
+
+matplotlib.use("TkAgg")
 
 
 def multirun():
