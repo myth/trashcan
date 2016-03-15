@@ -9,7 +9,7 @@ import numpy as np
 from modules.flatland import (DOWN, EMPTY, FOOD, LEFT, PLAYER, POISON, RIGHT,
                               UP, Agent, FlatLand)
 from modules.nnet import Layer, NeuralNetwork
-from settings import AGENT_START_LOCATION, FLATLAND_COLS, FLATLAND_ROWS
+from settings import AGENT_START_LOCATION, FLATLAND_COLS, FLATLAND_ROWS, NETWORK_STRUCTURE, ACTIVATION_FUNCTIONS
 
 # FlatLand
 BOARD = np.array([
@@ -386,3 +386,13 @@ class NeuralNetworkTest(unittest.TestCase):
 
     def setUp(self):
         self.agent = Agent(FlatLand(preset=deepcopy(BOARD)))
+
+    def testInit(self):
+        self.nn = NeuralNetwork()
+        self.assertEqual(len(self.nn._net), len(NETWORK_STRUCTURE))
+
+        for layer, size in zip(self.nn._net, NETWORK_STRUCTURE):
+            self.assertEqual(len(layer.tensor), size)
+
+        for layer, af in zip(self.nn._net, ACTIVATION_FUNCTIONS):
+            self.assertEqual(layer.af, af)

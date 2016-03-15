@@ -143,7 +143,6 @@ class NeuralNetwork(object):
         """
         Send a signal of inputs through the layers
         :param inputs: A list of input values
-        :return: A list of output values (the value of the last layer's tensor field)
         """
 
         inputs = np.array(inputs, dtype='float')
