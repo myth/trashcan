@@ -34,8 +34,10 @@ class FlatLand(object):
         else:
             self.board = np.zeros((settings.FLATLAND_COLS, settings.FLATLAND_ROWS), dtype='int')
             self._init_board()
-        self.original_num_food = self.num_food
-        self.original_num_poison = self.num_poison
+        self.original_num_food = self._get_num_food()
+        self.original_num_poison = self._get_num_poison()
+        self.num_food = self.original_num_food
+        self.num_poison = self.original_num_poison
 
     def move(self, direction):
         self.set(self.x, self.y, EMPTY)
@@ -44,6 +46,12 @@ class FlatLand(object):
         self.set(x, y)
         self.x = x
         self.y = y
+
+        # Update board statistics
+        if item == FOOD:
+            self.num_food -= 1
+        elif item == POISON:
+            self.num_poison -= 1
 
         return item
 
@@ -59,12 +67,10 @@ class FlatLand(object):
     def set(self, x, y, val=PLAYER):
         self.board[y][x] = val
 
-    @property
-    def num_food(self):
+    def _get_num_food(self):
         return sum(len(list(filter(lambda x: x == FOOD, row))) for row in self.board)
 
-    @property
-    def num_poison(self):
+    def _get_num_poison(self):
         return sum(len(list(filter(lambda x: x == POISON, row))) for row in self.board)
 
     def _init_board(self):
