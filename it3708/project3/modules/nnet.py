@@ -87,7 +87,7 @@ class NeuralNetwork(object):
     A NeuralNetwork is a wrapper for a series of layers
     """
 
-    def __init__(self):
+    def __init__(self, net=None, afs=None):
         """
         Constructs a NeuralNetwork with the provided structure. The structure argument must be a tuple on the
         following form: (no_input, no_hidden, no_hidden2, ..., no_output)
@@ -95,8 +95,13 @@ class NeuralNetwork(object):
 
         self.log = logging.getLogger(__name__)
 
-        structure = settings.NETWORK_STRUCTURE.copy()
-        activation_functions = settings.ACTIVATION_FUNCTIONS.copy()
+        if net is None:
+            net = settings.NETWORK_STRUCTURE
+        if afs is None:
+            afs = settings.ACTIVATION_FUNCTIONS
+
+        structure = net.copy()
+        activation_functions = afs.copy()
         assert len(structure) == len(activation_functions)
 
         structure = list(structure)

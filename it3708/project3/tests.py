@@ -8,8 +8,9 @@ from copy import deepcopy
 import numpy as np
 from modules.flatland import (DOWN, EMPTY, FOOD, LEFT, PLAYER, POISON, RIGHT,
                               UP, Agent, FlatLand)
-from modules.nnet import Layer, NeuralNetwork
-from settings import AGENT_START_LOCATION, FLATLAND_COLS, FLATLAND_ROWS, NETWORK_STRUCTURE, ACTIVATION_FUNCTIONS
+from modules.nnet import ActivationFunction, Layer, NeuralNetwork
+from settings import (ACTIVATION_FUNCTIONS, AGENT_START_LOCATION,
+                      FLATLAND_COLS, FLATLAND_ROWS, NETWORK_STRUCTURE)
 
 # FlatLand
 BOARD = np.array([
@@ -386,13 +387,62 @@ class NeuralNetworkTest(unittest.TestCase):
 
     def setUp(self):
         self.agent = Agent(FlatLand(preset=deepcopy(BOARD)))
+        self.nn = NeuralNetwork()
 
     def testInit(self):
-        self.nn = NeuralNetwork()
         self.assertEqual(len(self.nn._net), len(NETWORK_STRUCTURE))
 
         for layer, size in zip(self.nn._net, NETWORK_STRUCTURE):
             self.assertEqual(len(layer.tensor), size)
 
         for layer, af in zip(self.nn._net, ACTIVATION_FUNCTIONS):
-            self.assertEqual(layer.af, af)
+            if af is ActivationFunction.softmax:
+                self.assertEqual(layer.af, af)
+            else:
+                self.assertEqual(
+                    list(layer.af([.1, .1351, .62642, .2496829])),
+                    list(np.vectorize(af)([.1, .1351, .62642, .2496829]))
+                )
+
+        net = [2, 4, 2]
+        afs = [ActivationFunction.relu, ActivationFunction.relu, ActivationFunction.softmax]
+
+        self.nn = NeuralNetwork(net=net, afs=afs)
+
+        for layer, size in zip(self.nn._net, net):
+            self.assertEqual(len(layer.tensor), size)
+
+        for layer, af in zip(self.nn._net, afs):
+            if af is ActivationFunction.softmax:
+                self.assertEqual(layer.af, af)
+            else:
+                self.assertEqual(
+                    list(layer.af([.1, .1351, .62642, .2496829])),
+                    list(np.vectorize(af)([.1, .1351, .62642, .2496829]))
+                )
+
+    def testTest(self):
+        net = [2, 3, 2]
+        afs = [ActivationFunction.relu, ActivationFunction.relu, ActivationFunction.softmax]
+
+        self.nn = NeuralNetwork(net=net, afs=afs)
+
+        results = self.nn.test([1, 1, 0, 0, 1, 0])
+        print(results)
+        for a, b in zip(results, self.nn._output):
+            self.assertEqual(a, b)
+
+    def testSetWeights(self):
+        net = [2, 2, 2]
+        weights = [
+            np.array([0.5, -0.5]),
+            np.array([0.1, -0.3]),
+            np.array([-0.2, 0.8])
+        ]
+
+        self.nn = NeuralNetwork(net=net)
+
+        self.nn.set_weights(weights)
+
+        for layer, expected in zip(self.nn._net, weights):
+            self.assertTrue(layer.weights is expected)
