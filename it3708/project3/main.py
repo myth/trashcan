@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 
 import settings
 from modules.evolution import EvolutionLoop
+from modules.flatland import Agent
+from modules.gui import Main
 
 
 def multirun():
@@ -23,7 +25,7 @@ def multirun():
     return res
 
 
-def main():
+def main_plot():
     dictConfig(config=settings.LOG_CONFIG)
     log = getLogger('main')
     log.info('Starting EA')
@@ -84,5 +86,30 @@ def main():
         plt.show()
 
 
+def main_tkinter():
+    """
+    Main program for EA+NN FlatLand solution
+    """
+
+    # Set up logging
+    dictConfig(config=settings.LOG_CONFIG)
+    log = getLogger('main')
+    log.info('Starting EA')
+
+    # Create an agent
+    agent = Agent()
+
+    # Create and start the EvolutionLoop
+    el = EvolutionLoop()
+    results = el.start()
+
+    # Spawn the Tkinter frame and run the mainloop
+    frame = Main()
+    frame.controller.set('ea_loop', el)
+    frame.controller.agent = agent
+    frame.draw_agent(agent)
+    frame.mainloop()
+
+
 if __name__ == '__main__':
-    main()
+    main_tkinter()
