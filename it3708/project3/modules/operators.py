@@ -56,6 +56,9 @@ class GeneticOperator(object):
     def crossover(genotype_one, genotype_two):
         """
         This genetic operator performs crossover on a pair of genotypes
+        :param genotype_one: The genotype of specimen A
+        :param genotype_two: The genotype of specimen B
+        :return: A tuple with (new genotype one, new genotype two)
         """
 
         slicepoints = set()

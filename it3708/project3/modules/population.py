@@ -9,6 +9,7 @@ from random import choice, randint, random
 
 import numpy as np
 import settings
+
 from modules.fitness import Fitness
 from modules.flatland import Agent, FlatLand
 from modules.operators import GeneticOperator, Phenotype
@@ -238,6 +239,7 @@ class Population(object):
     def get_n_most_fit(self, n=5):
         """
         Returns a list of the N most fit individuals in the population
+        :param n: The number of individuals to retrieve
         :return: A list of individals with the highest fitness
         """
 

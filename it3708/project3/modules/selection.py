@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 
 import settings
+
 from modules.evolution import EvolutionLoop
 from modules.fitness import Fitness
 from modules.population import AgentIndividual, Individual, IntIndividual
@@ -171,6 +172,7 @@ class ParentSelection(AbstractSelection):
         """
         Helper that produces pairs of children from pairs of parents in an ordered list
         NB: Asssumes even numbered list of parents that is of size settings.MAX_CHILD_SIZE_POOL
+        :param parents: A list of parents that children should be created from
         """
 
         individual_class = Individual

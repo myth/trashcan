@@ -5,6 +5,7 @@
 from logging import getLogger
 
 import settings
+
 from modules.flatland import FOOD, POISON, FlatLand
 from modules.nnet import NeuralNetwork
 from modules.population import Population
@@ -74,7 +75,7 @@ class EvolutionLoop(object):
         nn = NeuralNetwork()
         nn.set_weights(self.adults.most_fit.phenotype)
 
-        nn.test(agent, timesteps=settings.DEFAULT_TRAIN_TIMESTEPS, record_run=True)
+        nn.test(agent.sense())
         print('FOOD: %d' % agent.stats[FOOD])
         print('POISON: %d' % agent.stats[POISON])
 

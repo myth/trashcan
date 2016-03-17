@@ -3,6 +3,7 @@
 # Created by 'myth' on 2/19/16
 
 import settings
+
 from modules.flatland import Agent, FlatLand
 from modules.nnet import NeuralNetwork
 
@@ -69,12 +70,13 @@ class Fitness(object):
         """
         FlatLand Agent fitness function runs 60 timesteps in the neural network.
         :param phenotype: The phenotype representation (Weight tensor nodes)
+        :param agent: The Agent object
         :return: The accumulated fitness of the agent
         """
 
         nn = NeuralNetwork()
         nn.set_weights(phenotype)
 
-        nn.test(agent, timesteps=settings.DEFAULT_TRAIN_TIMESTEPS)
+        nn.test(agent.sense())
 
         return agent.fitness

@@ -118,12 +118,22 @@ class NeuralNetwork(object):
 
     def test(self, inputs):
         """
-        Test the output of
+        Test the output of a set of input signals
+        :param inputs: An array of input signals
         """
 
         self._send_signal(inputs)
 
         return self._output
+
+    def run_on_agent(self, agent, timesteps=1):
+        """
+        Run the network on a specifiec agent
+        :param timesteps: The amount of steps the agent is allowed to take before terminating
+        :return: The history of moves this agent made to get to the current state
+        """
+
+
 
     def set_weights(self, weights):
         """

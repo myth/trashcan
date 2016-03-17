@@ -6,11 +6,11 @@ from logging import getLogger
 from logging.config import dictConfig
 
 import matplotlib
+matplotlib.use('tkAgg')
 import matplotlib.pyplot as plt
+
 import settings
 from modules.evolution import EvolutionLoop
-
-matplotlib.use("TkAgg")
 
 
 def multirun():
@@ -22,8 +22,8 @@ def multirun():
 
     return res
 
-if __name__ == '__main__':
 
+def main():
     dictConfig(config=settings.LOG_CONFIG)
     log = getLogger('main')
     log.info('Starting EA')
@@ -82,3 +82,7 @@ if __name__ == '__main__':
 
         ax1.legend(bbox_to_anchor=(0., 1.02, 1., .102), mode='expand', ncol=3, loc=3, borderaxespad=0.)
         plt.show()
+
+
+if __name__ == '__main__':
+    main()
