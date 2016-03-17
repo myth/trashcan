@@ -434,13 +434,14 @@ class NeuralNetworkTest(unittest.TestCase):
 
     def testSetWeights(self):
         net = [2, 2, 2]
+        afs = [ActivationFunction.relu, ActivationFunction.relu, ActivationFunction.softmax]
         weights = [
             np.array([0.5, -0.5]),
             np.array([0.1, -0.3]),
             np.array([-0.2, 0.8])
         ]
 
-        self.nn = NeuralNetwork(net=net)
+        self.nn = NeuralNetwork(net=net, afs=afs)
 
         self.nn.set_weights(weights)
 

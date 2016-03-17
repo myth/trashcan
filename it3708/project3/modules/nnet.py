@@ -133,7 +133,7 @@ class NeuralNetwork(object):
         :return: The history of moves this agent made to get to the current state
         """
 
-
+        pass
 
     def set_weights(self, weights):
         """

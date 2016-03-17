@@ -12,8 +12,8 @@ from modules.selection import *
 # NEURAL NET SETTINGS
 # -----------------------------------
 
-NETWORK_STRUCTURE = [6, 10, 3]
-ACTIVATION_FUNCTIONS = [ActFunc.relu, ActFunc.softmax, ActFunc.softmax]
+NETWORK_STRUCTURE = [6, 3]
+ACTIVATION_FUNCTIONS = [ActFunc.relu, ActFunc.softmax]
 DEFAULT_TRAIN_TIMESTEPS = 60
 WEIGHT_GRANULARITY = 32
 FLATLAND_ROWS = 10
