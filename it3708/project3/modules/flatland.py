@@ -253,6 +253,21 @@ class Agent(object):
         self.steps = 0
         self._dir_index = 0
 
+    def run(self, nnet, timesteps=1):
+        """
+        Run the agent for N timesteps, on the provided neural network.
+        :param nnet: An instance of NeuralNetwork
+        :param timesteps: The meximum number of steps allowed by this Agent.
+        :return: The history of moves performed by the agent
+        """
+
+        history = []
+        dir_funcs = [self.forward, self.left, self.right]
+        for i in range(timesteps):
+            best_move = dir_funcs[np.argmax(nnet.test(self.sense()))]
+            history.append(best_move)
+            best_move()
+
     def _rotate(self, i):
         """
         Get the direction index of a direction of a rotation to the left (-1) or right (1)

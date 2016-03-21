@@ -127,16 +127,6 @@ class NeuralNetwork(object):
 
         return self._output
 
-    def run_on_agent(self, agent, timesteps=1):
-        """
-        Run the network on a specifiec agent
-        :param agent: An instance of Agent
-        :param timesteps: The amount of steps the agent is allowed to take before terminating
-        :return: The history of moves this agent made to get to the current state
-        """
-
-        pass
-
     def set_weights(self, weights):
         """
         Force the layer weights with the provided array

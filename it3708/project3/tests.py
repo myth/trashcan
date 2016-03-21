@@ -296,6 +296,14 @@ class AgentTest(unittest.TestCase):
 
         print(self.agent.flatland.board)
 
+    def testRun(self):
+        nnet = NeuralNetwork()
+        self.agent.run(nnet)
+        self.assertEqual(self.agent.steps, 1)
+        self.agent = Agent()
+        self.agent.run(nnet, timesteps=60)
+        self.assertEqual(self.agent.steps, 60)
+
     def testSense(self):
         print(self.agent.flatland.board)
         sensed = self.agent.sense()
