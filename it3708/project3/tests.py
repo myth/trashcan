@@ -361,6 +361,16 @@ class AgentTest(unittest.TestCase):
 
         self.assertEqual(self.agent.fitness, expected)
 
+    def testReset(self):
+        self.agent.forward()
+        self.agent.forward()
+        self.assertNotEqual(self.agent.steps, 0)
+        self.agent.reset()
+        self.assertEqual(self.agent.steps, 0)
+        self.assertEqual(self.agent.stats[FOOD], 0)
+        self.assertEqual(self.agent.stats[POISON], 0)
+        self.assertEqual(self.agent.direction, (0, -1))
+
 
 class LayerTest(unittest.TestCase):
 
