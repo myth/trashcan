@@ -298,11 +298,16 @@ class AgentTest(unittest.TestCase):
 
     def testRun(self):
         nnet = NeuralNetwork()
-        self.agent.run(nnet)
+        history = self.agent.run(nnet)
         self.assertEqual(self.agent.steps, 1)
+        self.assertEqual(len(history), 1)
+
         self.agent = Agent()
-        self.agent.run(nnet, timesteps=60)
+        history = self.agent.run(nnet, timesteps=60)
         self.assertEqual(self.agent.steps, 60)
+        self.assertEqual(len(history), 60)
+        for h in history:
+            self.assertTrue(h in [self.agent.forward, self.agent.left, self.agent.right])
 
     def testSense(self):
         print(self.agent.flatland.board)

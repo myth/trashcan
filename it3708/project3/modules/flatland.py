@@ -268,6 +268,8 @@ class Agent(object):
             history.append(best_move)
             best_move()
 
+        return history
+
     def _rotate(self, i):
         """
         Get the direction index of a direction of a rotation to the left (-1) or right (1)
