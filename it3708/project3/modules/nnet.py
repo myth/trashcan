@@ -67,7 +67,8 @@ class Layer(object):
 
     def fire(self, incoming):
         """
-        Fire signals
+        Fire a signal to all the neurons in this layer (Assumes full connectivity).
+        :param incoming: An array of signals coming into this layer
         """
 
         if not isinstance(incoming, np.ndarray):
@@ -129,6 +130,7 @@ class NeuralNetwork(object):
     def run_on_agent(self, agent, timesteps=1):
         """
         Run the network on a specifiec agent
+        :param agent: An instance of Agent
         :param timesteps: The amount of steps the agent is allowed to take before terminating
         :return: The history of moves this agent made to get to the current state
         """

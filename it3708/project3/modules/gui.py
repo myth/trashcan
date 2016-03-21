@@ -212,6 +212,7 @@ class Main(tk.Frame):
         self.controller.get('fitness').set('Fitness: %.3f' % agent.fitness)
         self.controller.get('food').set('Food: %d' % agent.stats[FOOD])
         self.controller.get('poison').set('Poison: %d' % agent.stats[POISON])
+        self.controller.get('steps').set('Steps: %d' % agent.steps)
 
     def _init_gui(self):
         """
@@ -339,6 +340,15 @@ class Main(tk.Frame):
         poison_label.config(anchor='nw')
         poison_label.pack(fill=tk.X)
         self.controller.set('poison', poison_stringvar)
+
+        # Add steps text field
+        steps_stringvar = tk.StringVar()
+        steps_label = tk.Label(self.sidebar, textvariable=steps_stringvar, width=20)
+        steps = 0
+        steps_stringvar.set('Steps: %d' % steps)
+        steps_label.config(anchor='nw')
+        steps_label.pack(fill=tk.X)
+        self.controller.set('steps', steps_stringvar)
 
         # Pack the entire sidebar
         self.sidebar.pack(side=tk.LEFT, padx=15, pady=15, ipadx=15, ipady=15, fill=tk.BOTH, expand=1)

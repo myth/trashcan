@@ -154,6 +154,7 @@ class Agent(object):
         if flatland is None:
             flatland = FlatLand()
         self.flatland = flatland
+        self.steps = 0
         self.fitness = 0
         self.stats = {
             FOOD: 0,
@@ -177,6 +178,7 @@ class Agent(object):
         """
 
         item = self.flatland.move(self.direction)
+        self.steps += 1
         self._update_fitness(item)
 
         return item
@@ -189,6 +191,19 @@ class Agent(object):
 
         self._dir_index = self._rotate(-1)
         item = self.flatland.move(self.direction)
+        self.steps += 1
+        self._update_fitness(item)
+
+        return item
+
+    def right(self):
+        """
+        Perform a rotation to the right and move forward
+        :return: The value of the cell that was currently moved to
+        """
+        self._dir_index = self._rotate(1)
+        item = self.flatland.move(self.direction)
+        self.steps += 1
         self._update_fitness(item)
 
         return item
@@ -201,17 +216,6 @@ class Agent(object):
         """
 
         return self.flatland.x, self.flatland.y
-
-    def right(self):
-        """
-        Perform a rotation to the right and move forward
-        :return: The value of the cell that was currently moved to
-        """
-        self._dir_index = self._rotate(1)
-        item = self.flatland.move(self.direction)
-        self._update_fitness(item)
-
-        return item
 
     def sense(self):
         """
@@ -246,6 +250,7 @@ class Agent(object):
             POISON: 0
         }
         self.fitness = 0
+        self.steps = 0
         self._dir_index = 0
 
     def _rotate(self, i):
