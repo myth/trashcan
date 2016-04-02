@@ -3,15 +3,12 @@
 # Created by 'myth' on 2/19/16
 
 import itertools
-from copy import deepcopy
 from logging import getLogger
-from random import choice, randint, random
+from random import randint, random
 
-import numpy as np
 import settings
 
-from modules.fitness import Fitness
-from modules.flatland import Agent, FlatLand
+from modules.flatland import Agent
 from modules.operators import GeneticOperator, Phenotype
 
 
@@ -28,58 +25,46 @@ class Individual(object):
         """
 
         self.ID = self.next_id()
+        self.dirty = True
+        self.invulnerable = False
         if genome_length:
-            self.genotype = np.random.random_integers(0, 1, genome_length)
-            self.genotype = [int(i) for i in self.genotype]
+            self.genotype = [randint(0, settings.WEIGHT_GRANULARITY - 1) for i in range(settings.GENOME_LENGTH)]
         else:
             self.genotype = genotype[:]
+
         self.generation = generation
         self.fitness = 0.0
-        self.phenotype = self.translate()
-
-    def mutate(self):
-        """
-        Performs a mutation operation
-        """
-
-        if random() < settings.GENOME_MUTATION_RATE:
-            GeneticOperator.mutate(self.genotype)
-            self.phenotype = self.translate()
-
-        if random() < settings.GENOME_COMPONENT_MUTATION_RATE:
-            GeneticOperator.component_mutate(self.genotype)
-            self.phenotype = self.translate()
+        self.phenotype = None
 
     def crossover(self, other):
-        """
-        Performs a crossover operation
-        """
-
+        self.dirty = True
+        other.dirty = True
         self.genotype, other.genotype = GeneticOperator.crossover(self.genotype, other.genotype)
-        self.translate()
-        other.translate()
 
-    def diversity(self, other):
-        """
-        Calculates the diversity of this individual compared to another
-        """
+    def mutate(self):
+        # Reset invulnerability and return if we are in an non-mutating mode
+        if self.invulnerable:
+            self.invulnerable = False
+            return
 
-        if self is other:
-            return 0
+        # Check for single index mutation
+        if random() < settings.GENOME_MUTATION_RATE:
+            self.dirty = True
+            GeneticOperator.int_mutate(self.genotype, m=settings.WEIGHT_GRANULARITY)
 
-        e = 0
-        for i, val in enumerate(self.genotype):
-            e += int(val == other.genotype[i])
-
-        return 1 / (1 + e)
+        # Check for component mutation
+        if random() < settings.GENOME_COMPONENT_MUTATION_RATE:
+            self.dirty = True
+            GeneticOperator.int_component_mutate(self.genotype, m=settings.WEIGHT_GRANULARITY)
 
     def translate(self):
         """
         Translates this individual's genotype into a phenotype representation
         """
 
-        self.phenotype = Phenotype.translate_genotype_to_phenotype(self.genotype)
-        self.fitness = settings.FITNESS_FUNCTION(self.phenotype)
+        if self.dirty:
+            self.phenotype = Phenotype.translate_genotype_to_phenotype(self.genotype)
+            self.dirty = False
 
         return self.phenotype
 
@@ -96,70 +81,6 @@ class Individual(object):
         """
 
         return self.__str__()
-
-
-class IntIndividual(Individual):
-    def __init__(self, genotype=None, generation=0):
-        if genotype:
-            super(IntIndividual, self).__init__(
-                genotype=deepcopy(genotype),
-                generation=generation
-            )
-        else:
-            super(IntIndividual, self).__init__(
-                genotype=[randint(0, settings.SURPRISING_SEQUENCE_S - 1) for i in range(settings.GENOME_LENGTH)]
-            )
-
-    def mutate(self):
-        if random() < settings.GENOME_MUTATION_RATE:
-            GeneticOperator.int_mutate(self.genotype, m=settings.SURPRISING_SEQUENCE_S)
-            self.phenotype = self.translate()
-
-        if random() < settings.GENOME_COMPONENT_MUTATION_RATE:
-            GeneticOperator.int_component_mutate(self.genotype, m=settings.SURPRISING_SEQUENCE_S)
-            self.phenotype = self.translate()
-
-    def crossover(self, other):
-        self.genotype, other.genotype = GeneticOperator.crossover(self.genotype, other.genotype)
-        self.translate()
-        other.translate()
-
-
-class AgentIndividual(IntIndividual):
-    """
-    Individual connected to an agent, which in turn is tested through a neural network
-    """
-
-    def __init__(self, genotype=None, generation=0):
-        self.agent = Agent(FlatLand())
-        if genotype:
-            super(AgentIndividual, self).__init__(
-                genotype=deepcopy(genotype),
-                generation=generation
-            )
-        else:
-            super(AgentIndividual, self).__init__(
-                genotype=[randint(0, settings.WEIGHT_GRANULARITY - 1) for i in range(settings.GENOME_LENGTH)]
-            )
-
-    def mutate(self):
-        if random() < settings.GENOME_MUTATION_RATE:
-            GeneticOperator.int_mutate(self.genotype, m=settings.WEIGHT_GRANULARITY)
-            self.phenotype = self.translate()
-
-        if random() < settings.GENOME_COMPONENT_MUTATION_RATE:
-            GeneticOperator.int_component_mutate(self.genotype, m=settings.WEIGHT_GRANULARITY)
-            self.phenotype = self.translate()
-
-    def translate(self):
-        """
-        Translates this individual's genotype into a phenotype representation
-        """
-
-        self.phenotype = Phenotype.translate_genotype_to_phenotype(self.genotype)
-        self.fitness = settings.FITNESS_FUNCTION(self.phenotype, self.agent)
-
-        return self.phenotype
 
 
 class Population(object):
@@ -190,12 +111,8 @@ class Population(object):
         # round to nearest integer
         self.individuals = list()
         for i in range(population_size):
-            if settings.FITNESS_FUNCTION is Fitness.surprising_sequence:
-                self.individuals.append(IntIndividual())
-            elif settings.FITNESS_FUNCTION is Fitness.flatland_agent:
-                self.individuals.append(AgentIndividual())
-            else:
-                self.individuals.append(Individual(genome_length=genome_length))
+            ind = Individual(genome_length=genome_length)
+            self.individuals.append(ind)
 
     @property
     def size(self):
@@ -218,6 +135,19 @@ class Population(object):
         tot_fitness = 0.0
         most_fit = None
         for i in self.individuals:
+            # Set the nnet weights to current pheno:
+            self.loop.nn.set_weights(i.translate())
+
+            # Run agent trough each flatland scenario in settings and set the accumulated fitness
+            i_tot_fitness = 0
+            for fs in range(settings.FLATLAND_SCENARIOS):
+                fl = settings.FLATLANDS[fs]
+                agent = Agent(flatland=fl)
+                agent.run(self.loop.nn, timesteps=settings.FLATLAND_TIMESTEPS)
+                i_tot_fitness += agent.fitness
+
+            i.fitness = i_tot_fitness
+
             if not most_fit:
                 most_fit = i
             if i.fitness > most_fit.fitness:
@@ -227,23 +157,6 @@ class Population(object):
         self.avg_fitness = tot_fitness / self.size
         self.std_dev = sum(map(lambda x: (x.fitness - self.avg_fitness)**2, self.individuals)) / self.size
         self.most_fit = most_fit
-
-    def get_random_individual(self):
-        """
-        Returns the genotype of a random individual
-        :return: A Individual object
-        """
-
-        return choice(self.individuals)
-
-    def get_n_most_fit(self, n=5):
-        """
-        Returns a list of the N most fit individuals in the population
-        :param n: The number of individuals to retrieve
-        :return: A list of individals with the highest fitness
-        """
-
-        return list(self.sorted())[:n]
 
     def sorted(self):
         """

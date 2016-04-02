@@ -39,25 +39,19 @@ class ActivationFunction(object):
         return math.log(1 + math.exp(x))
 
 
-class Layer(object):
+class Neuron(object):
     """
-    The Layer contains a weight tensor, activation function and helper methods for processing layer data
+    The Neuron contains a set of input weights for all incoming axions
     """
 
-    def __init__(self, nodes, activation_function=ActivationFunction.relu, weights=None):
+    def __init__(self, weights, activation_function=ActivationFunction.relu):
         """
-        Construct a Layer of N nodes, and an optional input reference
-        :param nodes: The number of nodes in the layer
-        :param activation_function: Which activation function the layer should apply
+        Construct a Neuron with weights
+        :param weights: A numpy array of weights, also indicating the number of incoming connections
         """
 
-        self.tensor = np.zeros(nodes, dtype='float')
-
-        # Add weight presets of we have them provided, otherwise uniform random from -0.5 to 0.5
-        if weights is not None:
-            self.weights = weights
-        else:
-            self.weights = np.random.uniform(-.5, .5, nodes)
+        self.weights = weights
+        self.output = 0
 
         # Only softmax is a array-wide function
         if activation_function is ActivationFunction.softmax:
@@ -67,20 +61,99 @@ class Layer(object):
 
     def fire(self, incoming):
         """
+        Fire a signal from this neuron, base on incoming axions
+        :param incoming: An array of signals coming into this Neuron
+        """
+
+        # Set value of each node as the weighted average of all incoming signals
+        self.output = self.af(np.sum(self.weights * incoming))
+
+    def __str__(self):
+        """
+        String representation of this neuron
+        """
+
+        return 'Neuron output: %.3f Weights: %s' % (self.output, self.weights)
+
+
+class Layer(object):
+    """
+    Base class for Layer objects
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+
+        self.neurons = []
+
+    def __str__(self):
+        """
+        String representation of this layer
+        """
+
+        return '--- Layer ---\n%s' % ('\n'.join(str(n) for n in self.neurons))
+
+
+class InputLayer(Layer):
+    """
+    This layer has no weigts on the neurons
+    """
+
+    def __init__(self, nodes):
+        """
+        Construct a Layer of N nodes, and an optional input reference
+        :param nodes: The number of nodes in the layer
+        """
+
+        super(InputLayer, self).__init__()
+
+        # Create dem neurons
+        for n in range(nodes):
+            self.neurons.append(Neuron(None))
+
+    @staticmethod
+    def fire(incoming):
+        """
         Fire a signal to all the neurons in this layer (Assumes full connectivity).
         :param incoming: An array of signals coming into this layer
         """
 
-        if not isinstance(incoming, np.ndarray):
-            incoming = np.array(incoming)
+        return np.array(incoming)
 
-        # Set value of each node as the weighted average of all incoming signals
-        for i in range(len(self.tensor)):
-            self.tensor[i] = (incoming.sum() / len(incoming)) * self.weights[i]
 
-        self.tensor = self.af(self.tensor)
+class StandardLayer(Layer):
+    """
+    The Layer contains neurons and a fire method for processing neurons
+    """
 
-        return self.tensor
+    def __init__(self, nodes, incoming, activation_function=ActivationFunction.relu):
+        """
+        Construct a Layer of N nodes, and an optional input reference
+        :param nodes: The number of nodes in the layer
+        :param incoming: The number of incoming axions to each node
+        :param activation_function: Which activation function the layer should apply
+        """
+
+        super(StandardLayer, self).__init__()
+
+        # Only softmax is a array-wide function
+        if activation_function is not ActivationFunction.softmax:
+            activation_function = np.vectorize(activation_function)
+
+        # Create dem neurons
+        for n in range(nodes):
+            weights = np.random.uniform(-.5, .5, incoming)
+            self.neurons.append(Neuron(weights, activation_function=activation_function))
+
+    def fire(self, incoming):
+        """
+        Fire a signal to all the neurons in this layer (Assumes full connectivity).
+        :param incoming: An array of signals coming into this layer
+        """
+
+        return np.array([neuron.fire(incoming) for neuron in self.neurons], dtype='float')
 
 
 class NeuralNetwork(object):
@@ -105,17 +178,25 @@ class NeuralNetwork(object):
         activation_functions = afs.copy()
         assert len(structure) == len(activation_functions)
 
-        structure = list(structure)
-        inputs = structure.pop(0)
-        inputs_af = activation_functions.pop(0)
-        outputs = structure.pop()
-        outputs_af = activation_functions.pop()
-
         self._net = []
-        self._net.append(Layer(inputs, inputs_af))
+
+        inputs = structure.pop(0)
+        self._net.append(InputLayer(inputs))
         while structure:
-            self._net.append(Layer(structure.pop(0), activation_function=activation_functions.pop(0)))
-        self._net.append(Layer(outputs, outputs_af))
+            outputs = structure.pop(0)
+            inputs_af = activation_functions.pop(0)
+            self._net.append(
+                StandardLayer(
+                    outputs,
+                    len(self._net[-1].neurons),
+                    activation_function=inputs_af
+                )
+            )
+
+        # Store the final layer activation functions
+        self._output_af = activation_functions.pop(0)
+        if self._output_af is not ActivationFunction.softmax:
+            self._output_af = np.vectorize(self._output_af)
 
     def test(self, inputs):
         """
@@ -123,28 +204,20 @@ class NeuralNetwork(object):
         :param inputs: An array of input signals
         """
 
-        self._send_signal(inputs)
-
-        return self._output
+        return self._send_signal(inputs)
 
     def set_weights(self, weights):
         """
         Force the layer weights with the provided array
-        :param weights: A list of numpy weight tensors
+        :param weights: A numpy array of weights
         """
 
-        assert len(self._net) == len(weights)
-
-        for i, w in enumerate(weights):
-            self._net[i].weights = w
-
-    @property
-    def _input(self):
-        return self._net[0].tensor
-
-    @property
-    def _output(self):
-        return self._net[-1].tensor
+        start = 0
+        for layer in self._net[1:]:
+            for neuron in layer.neurons:
+                step = len(neuron.weights)
+                neuron.weights = weights[start:start + step]
+                start += step
 
     def _send_signal(self, inputs):
         """
@@ -152,7 +225,14 @@ class NeuralNetwork(object):
         :param inputs: A list of input values
         """
 
-        inputs = np.array(inputs, dtype='float')
-        for i, layer in enumerate(self._net):
-            layer.fire(inputs)
-            inputs = layer.tensor
+        for layer in self._net:
+            inputs = layer.fire(inputs)
+
+        return self._output_af(inputs)
+
+    def __str__(self):
+        """
+        String representation of this Neural Network
+        """
+
+        return '=== NeuralNetwork ===\n%s' % '\n'.join(layer for layer in self._net)

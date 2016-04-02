@@ -2,7 +2,9 @@
 #
 # Created by 'myth' on 3/14/16
 
+import logging
 import random
+from copy import deepcopy
 
 import numpy as np
 import settings
@@ -151,9 +153,11 @@ class Agent(object):
     """
 
     def __init__(self, flatland=None):
+        self._log = logging.getLogger(__name__)
         if flatland is None:
             flatland = FlatLand()
-        self.flatland = flatland
+        self.flatland = deepcopy(flatland)
+        self.orig_flatland = deepcopy(self.flatland)
         self.steps = 0
         self.fitness = 0
         self.stats = {
@@ -237,14 +241,14 @@ class Agent(object):
             float(right == POISON)
         ]
 
-        return ay
+        return np.array(ay)
 
     def reset(self):
         """
         Reset the state of this Agent, and spawn a new random FlatLand instance
         """
 
-        self.flatland = FlatLand()
+        self.flatland = deepcopy(self.orig_flatland)
         self.stats = {
             FOOD: 0,
             POISON: 0
@@ -261,14 +265,23 @@ class Agent(object):
         :return: The history of moves performed by the agent
         """
 
-        history = []
         dir_funcs = [self.forward, self.left, self.right]
+        stats = {
+            0: 0,
+            1: 0,
+            2: 0
+        }
         for i in range(timesteps):
-            best_move = dir_funcs[np.argmax(nnet.test(self.sense()))]
-            history.append(best_move)
+            recommended = np.argmax(nnet.test(self.sense()))
+            best_move = dir_funcs[recommended]
+            stats[int(recommended)] += 1
             best_move()
-
-        return history
+            
+        if settings.ENABLE_LOGGING and settings.VERBOSE_DEBUG:
+            self._log.debug(
+                'Ran %d steps on nnet, resulting in fitness: %.3f and distribution:' % (timesteps, self.fitness) +
+                ' Forward: %d, Left: %d, Right: %d' % (stats[0], stats[1], stats[2])
+            )
 
     def _rotate(self, i):
         """

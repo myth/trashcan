@@ -8,62 +8,68 @@ from modules.nnet import ActivationFunction as ActFunc
 from modules.operators import Phenotype
 from modules.selection import *
 
+# General parameters
+ENABLE_LOGGING = True
+VERBOSE_DEBUG = False
+GUI_UPDATE_INTERVAL = 350
+
+
+def reduce(iterable, i=0):
+    """
+    reduce was removed in python3, reintroducing
+    :param iterable: An iterable of any kind
+    :param i: Iterator variable
+    """
+    if i + 1 < len(iterable):
+        item = iterable[i]
+        return item * reduce(iterable, i=i+1)
+    return iterable[i]
+
 # -----------------------------------
 # NEURAL NET SETTINGS
 # -----------------------------------
 
 NETWORK_STRUCTURE = [6, 3]
 ACTIVATION_FUNCTIONS = [ActFunc.relu, ActFunc.softmax]
-DEFAULT_TRAIN_TIMESTEPS = 60
-WEIGHT_GRANULARITY = 32
+FLATLAND_TIMESTEPS = 60
+WEIGHT_GRANULARITY = 64
 FLATLAND_ROWS = 10
 FLATLAND_COLS = 10
-FLATLAND_SCENARIOS = 1
+FLATLAND_SCENARIOS = 5
 FLATLAND_DYNAMIC = True
+FLATLANDS = []
 FOOD_PROBABILITY = 0.33
 POISON_PROBABILITY = 0.33
 AGENT_START_LOCATION = (6, 8)
-AGENT_POISON_PENALTY_FACTOR = 1.0
-AGENT_UNREASONABLENESS = 0.1
+AGENT_POISON_PENALTY_FACTOR = 1.5
 
 # -----------------------------------
 # EA SETTINGS
 # -----------------------------------
 
-# General parameters
-ENABLE_LOGGING = True
-MULTI_RUN = False
-MULTI_RUN_TOTAL = 5
-
 # Core EA parameters
-MAX_GENERATIONS = 1
-MAX_ADULT_POOL_SIZE = 10
-MAX_CHILD_POOL_SIZE = 30
-GENOME_LENGTH = sum(NETWORK_STRUCTURE)
-GENOME_CROSSOVER_RATE = 0.1
+MAX_GENERATIONS = 10
+MAX_ADULT_POOL_SIZE = 50
+MAX_CHILD_POOL_SIZE = 50
+GENOME_LENGTH = reduce(NETWORK_STRUCTURE)
+GENOME_CROSSOVER_RATE = 0.7
 GENOME_CROSSOVER_POINTS = 1
-GENOME_MUTATION_RATE = 0.2
+GENOME_MUTATION_RATE = 0.5
 GENOME_MUTATION_INTENSITY = 1
-GENOME_COMPONENT_MUTATION_RATE = 0.08
+GENOME_COMPONENT_MUTATION_RATE = 0.15
 
 # Selection parameters
 ADULT_SELECTION_CLASS = GenerationalMixing
 PARENT_SELECTION_CLASS = TournamentSelection
+ELITISM_LEVEL = 2
 
 # Selection class-specific parameters
 TOURNAMENT_SELECTION_K = 5
-TOURNAMENT_SELECTION_EPSILON = 0.3
+TOURNAMENT_SELECTION_EPSILON = 0.2
 BOLTZMANN_SCALING_FACTOR = 1.0
 
 # Problem specific (phenotype / fitness) parameters
-FITNESS_FUNCTION = Fitness.flatland_agent
 PHENOTYPE_FUNCTION = Phenotype.nnet_weight_tensor
-ONEMAX_TARGET_LENGTH = GENOME_LENGTH
-ONEMAX_SOLUTION = '1' * ONEMAX_TARGET_LENGTH
-LOLZ_PREFIX_Z = 30
-SURPRISING_SEQUENCE_S = 9
-SURPRISING_SEQUENCE_LOCAL = False
-FLATLAND_GRANULARITY = 32
 
 
 # -----------------------------------
@@ -80,7 +86,7 @@ LOG_CONFIG = {
             'stream': 'ext://sys.stdout',
         },
         'file': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'default',
             'filename': os.path.join(os.path.dirname(__name__), 'debug.log'),

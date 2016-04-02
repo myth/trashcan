@@ -11,8 +11,7 @@ from copy import deepcopy
 import settings
 
 from modules.evolution import EvolutionLoop
-from modules.fitness import Fitness
-from modules.population import AgentIndividual, Individual, IntIndividual
+from modules.population import Individual
 
 
 class AbstractSelection(ABC):
@@ -137,8 +136,8 @@ class GenerationalMixing(AdultSelection):
         if settings.ENABLE_LOGGING:
             logging.getLogger(__name__).debug(
                 '%d adults selected from child pool of %d' % (
-                    len(self.pool),
-                    self.loop.children.size
+                    len(self.loop.adults.individuals),
+                    len(self.pool)
                 )
             )
 
@@ -176,39 +175,27 @@ class ParentSelection(AbstractSelection):
         """
 
         individual_class = Individual
-        if settings.FITNESS_FUNCTION is Fitness.surprising_sequence:
-            individual_class = IntIndividual
-        elif settings.FITNESS_FUNCTION is Fitness.flatland_agent:
-            individual_class = AgentIndividual
 
         parents = parents[:]
         self.pool.clear()
         self.loop.children.individuals.clear()
-        logging.getLogger(__name__).debug('Reproduce on parents list with size: %d' % len(parents))
+        if settings.ENABLE_LOGGING and settings.VERBOSE_DEBUG:
+            logging.getLogger(__name__).debug('Reproduce on parents list with size: %d' % len(parents))
 
         while parents:
             # Parent clone 1
             p1 = parents.pop()
             c1 = individual_class(genotype=deepcopy(p1.genotype), generation=p1.generation + 1)
             self.loop.children.individuals.append(c1)
-            if settings.FITNESS_FUNCTION is Fitness.flatland_agent:
-                c1.agent.flatland = deepcopy(p1.agent.flatland)
 
             # Parent clone 2
             p2 = parents.pop()
             c2 = individual_class(genotype=deepcopy(p2.genotype), generation=p2.generation + 1)
             self.loop.children.individuals.append(c2)
-            if settings.FITNESS_FUNCTION is Fitness.flatland_agent:
-                c2.agent.flatland = deepcopy(p2.agent.flatland)
 
             # Crossover clones as children
             if random.random() < settings.GENOME_CROSSOVER_RATE:
                 c1.crossover(c2)
-
-            p1.agent.reset()
-            p2.agent.reset()
-            c1.agent.reset()
-            c2.agent.reset()
 
 
 class FitnessProportionate(ParentSelection):
@@ -218,7 +205,8 @@ class FitnessProportionate(ParentSelection):
 
     def select(self):
         log = logging.getLogger(__name__)
-        log.debug('Performing FitnessProportionate parent selection')
+        if settings.ENABLE_LOGGING and settings.VERBOSE_DEBUG:
+            log.debug('Performing FitnessProportionate parent selection')
 
         self.pool.clear()
         tot_fitness = sum(i.fitness for i in self.loop.adults.individuals)
@@ -248,7 +236,8 @@ class SigmaScaling(ParentSelection):
 
     def select(self):
         self.pool.clear()
-        logging.getLogger(__name__).debug('Applying sigma scaling')
+        if settings.ENABLE_LOGGING and settings.VERBOSE_DEBUG:
+            logging.getLogger(__name__).debug('Applying sigma scaling')
 
         for i in self.loop.adults.individuals:
             i.fitness *= (1 + (i.fitness - self.loop.results[i.generation][1]) / 2 * self.loop.results[i.generation][2])
@@ -280,13 +269,24 @@ class TournamentSelection(ParentSelection):
     log = logging.getLogger(__name__)
 
     def select(self):
-        self.log.debug('Starting tournament selection (K:%d, e:%.2f)' % (
-            settings.TOURNAMENT_SELECTION_K,
-            settings.TOURNAMENT_SELECTION_EPSILON
-        ))
+        if settings.ENABLE_LOGGING and settings.VERBOSE_DEBUG:
+            self.log.debug('Starting tournament selection (K:%d, e:%.2f)' % (
+                settings.TOURNAMENT_SELECTION_K,
+                settings.TOURNAMENT_SELECTION_EPSILON
+            ))
         self.pool.clear()
 
-        individuals = self.loop.adults.individuals[:]
+        individuals = self.loop.adults.sorted()[:]
+
+        # If we have elitism, just add the best candidates to the pool
+        for i in range(settings.ELITISM_LEVEL):
+            elite = individuals.pop(0)
+            elite.invulnerable = True
+            if settings.ENABLE_LOGGING and settings.VERBOSE_DEBUG:
+                self.log.debug('Pre-selecting elite: %s' % elite)
+            self.pool.append(elite)
+
+        # Prepare for tournament
         random.shuffle(individuals)
 
         # As long as there are objects left in the individuals list, generate groups of K length
@@ -303,7 +303,7 @@ class TournamentSelection(ParentSelection):
                 winner = random.choice(list(local_group))
             self.pool.append(winner)
 
-            if settings.ENABLE_LOGGING:
+            if settings.ENABLE_LOGGING and settings.VERBOSE_DEBUG:
                 self.log.debug('Selected %s from local group for mating' % winner)
 
         self.reproduce(self.pool)
@@ -316,7 +316,8 @@ class BoltzmannSelection(ParentSelection):
 
     def select(self):
         self.pool.clear()
-        logging.getLogger(__name__).debug('Applying ranked diversity scaling')
+        if settings.ENABLE_LOGGING and settings.VERBOSE_DEBUG:
+            logging.getLogger(__name__).debug('Applying ranked diversity scaling')
 
         # Do Rank space weighting
         candidates = self.loop.adults.sorted()

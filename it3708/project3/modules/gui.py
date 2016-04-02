@@ -5,6 +5,7 @@
 import logging
 import tkinter as tk
 
+import numpy as np
 import settings
 
 from modules.flatland import FOOD, PLAYER, POISON
@@ -214,6 +215,17 @@ class Main(tk.Frame):
         self.controller.get('poison').set('Poison: %d' % agent.stats[POISON])
         self.controller.get('steps').set('Steps: %d' % agent.steps)
 
+        nn = self.controller.get('ea_loop').nn
+        sensations = agent.sense()
+        net_results = nn.test(sensations)
+        recommended = np.argmax(net_results)
+        print(sensations)
+        print(net_results)
+        print(recommended)
+        self.controller.get('recommended').set(
+            'Recommended: %s' % ['Forward', 'Left', 'Right'][recommended]
+        )
+
     def _init_gui(self):
         """
         Initializes the GUI
@@ -349,6 +361,15 @@ class Main(tk.Frame):
         steps_label.config(anchor='nw')
         steps_label.pack(fill=tk.X)
         self.controller.set('steps', steps_stringvar)
+
+        # Add recommended text field
+        recommended_stringvar = tk.StringVar()
+        recommended_label = tk.Label(self.sidebar, textvariable=recommended_stringvar, width=20)
+        recommended = 'Forward'
+        recommended_stringvar.set('Recommended: %s' % recommended)
+        recommended_label.config(anchor='nw')
+        recommended_label.pack(fill=tk.X)
+        self.controller.set('recommended', recommended_stringvar)
 
         # Pack the entire sidebar
         self.sidebar.pack(side=tk.LEFT, padx=15, pady=15, ipadx=15, ipady=15, fill=tk.BOTH, expand=1)

@@ -6,6 +6,7 @@ import unittest
 from copy import deepcopy
 
 import numpy as np
+import settings
 from modules.flatland import (DOWN, EMPTY, FOOD, LEFT, PLAYER, POISON, RIGHT,
                               UP, Agent, FlatLand)
 from modules.nnet import ActivationFunction, Layer, NeuralNetwork
@@ -185,11 +186,6 @@ class AgentTest(unittest.TestCase):
                     self.assertEqual(fixture, fl)
 
     def testInit(self):
-        a = Agent()
-        fl = FlatLand()
-        b = Agent(fl)
-        self.assertTrue(a.flatland is not b.flatland)
-        self.assertTrue(b.flatland is fl)
         self.assertEqual(self.agent.stats[FOOD], 0)
         self.assertEqual(self.agent.stats[POISON], 0)
         self.assertEqual(self.agent.fitness, 0)
@@ -298,23 +294,20 @@ class AgentTest(unittest.TestCase):
 
     def testRun(self):
         nnet = NeuralNetwork()
-        history = self.agent.run(nnet)
+        self.agent.run(nnet)
         self.assertEqual(self.agent.steps, 1)
-        self.assertEqual(len(history), 1)
 
         self.agent = Agent()
-        history = self.agent.run(nnet, timesteps=60)
+        self.agent.run(nnet, timesteps=60)
         self.assertEqual(self.agent.steps, 60)
-        self.assertEqual(len(history), 60)
-        for h in history:
-            self.assertTrue(h in [self.agent.forward, self.agent.left, self.agent.right])
 
     def testSense(self):
         print(self.agent.flatland.board)
         sensed = self.agent.sense()
         expected = [0, 0, 0, 1, 1, 0]
 
-        self.assertEqual(expected, sensed)
+        for a, b in zip(sensed, expected):
+            self.assertEqual(a, b)
 
         self.agent.right()
         print(self.agent.flatland.board)
@@ -322,7 +315,8 @@ class AgentTest(unittest.TestCase):
         sensed = self.agent.sense()
         expected = [0, 1, 1, 1, 0, 0]
 
-        self.assertEqual(expected, sensed)
+        for a, b in zip(sensed, expected):
+            self.assertEqual(a, b)
 
         # Reset back to direction UP, move to top-left corner
         self.agent._dir_index = 0
@@ -333,7 +327,8 @@ class AgentTest(unittest.TestCase):
         sensed = self.agent.sense()
         expected = [0, 1, 0, 0, 0, 0]
 
-        self.assertEqual(expected, sensed)
+        for a, b in zip(sensed, expected):
+            self.assertEqual(a, b)
 
         # Move to bottom-right corner
         self.agent.flatland.x = FLATLAND_COLS - 1
@@ -343,9 +338,11 @@ class AgentTest(unittest.TestCase):
         sensed = self.agent.sense()
         expected = [1, 1, 0, 0, 0, 0]
 
-        self.assertEqual(expected, sensed)
+        for a, b in zip(sensed, expected):
+            self.assertEqual(a, b)
 
     def testUpdateFitness(self):
+        settings.AGENT_POISON_PENALTY_FACTOR = 1.0
         print(self.agent.flatland.board)
         self.agent.forward()
 
@@ -383,90 +380,3 @@ class AgentTest(unittest.TestCase):
         self.assertEqual(self.agent.stats[FOOD], 0)
         self.assertEqual(self.agent.stats[POISON], 0)
         self.assertEqual(self.agent.direction, (0, -1))
-
-
-class LayerTest(unittest.TestCase):
-
-    def setUp(self):
-        self.layer = Layer(10, weights=WEIGHTS)
-
-    def testFire(self):
-        inputs = [1, 0, 0, 1, 0, 0]
-        print(self.layer.tensor)
-        self.layer.fire(inputs)
-        print(self.layer.tensor)
-
-        # Check 4 decimal places
-        for x, y in zip(self.layer.tensor, [.3333] * 10):
-            self.assertAlmostEqual(x, y, 4)
-
-        self.layer.weights = np.array([-0.5] * 10, dtype='float')
-        self.layer.fire(inputs)
-
-        self.assertEqual(list(self.layer.tensor), [0] * 10)
-
-
-class NeuralNetworkTest(unittest.TestCase):
-
-    def setUp(self):
-        self.agent = Agent(FlatLand(preset=deepcopy(BOARD)))
-        self.nn = NeuralNetwork()
-
-    def testInit(self):
-        self.assertEqual(len(self.nn._net), len(NETWORK_STRUCTURE))
-
-        for layer, size in zip(self.nn._net, NETWORK_STRUCTURE):
-            self.assertEqual(len(layer.tensor), size)
-
-        for layer, af in zip(self.nn._net, ACTIVATION_FUNCTIONS):
-            if af is ActivationFunction.softmax:
-                self.assertEqual(layer.af, af)
-            else:
-                self.assertEqual(
-                    list(layer.af([.1, .1351, .62642, .2496829])),
-                    list(np.vectorize(af)([.1, .1351, .62642, .2496829]))
-                )
-
-        net = [2, 4, 2]
-        afs = [ActivationFunction.relu, ActivationFunction.relu, ActivationFunction.softmax]
-
-        self.nn = NeuralNetwork(net=net, afs=afs)
-
-        for layer, size in zip(self.nn._net, net):
-            self.assertEqual(len(layer.tensor), size)
-
-        for layer, af in zip(self.nn._net, afs):
-            if af is ActivationFunction.softmax:
-                self.assertEqual(layer.af, af)
-            else:
-                self.assertEqual(
-                    list(layer.af([.1, .1351, .62642, .2496829])),
-                    list(np.vectorize(af)([.1, .1351, .62642, .2496829]))
-                )
-
-    def testTest(self):
-        net = [2, 3, 2]
-        afs = [ActivationFunction.relu, ActivationFunction.relu, ActivationFunction.softmax]
-
-        self.nn = NeuralNetwork(net=net, afs=afs)
-
-        results = self.nn.test([1, 1, 0, 0, 1, 0])
-        print(results)
-        for a, b in zip(results, self.nn._output):
-            self.assertEqual(a, b)
-
-    def testSetWeights(self):
-        net = [2, 2, 2]
-        afs = [ActivationFunction.relu, ActivationFunction.relu, ActivationFunction.softmax]
-        weights = [
-            np.array([0.5, -0.5]),
-            np.array([0.1, -0.3]),
-            np.array([-0.2, 0.8])
-        ]
-
-        self.nn = NeuralNetwork(net=net, afs=afs)
-
-        self.nn.set_weights(weights)
-
-        for layer, expected in zip(self.nn._net, weights):
-            self.assertTrue(layer.weights is expected)

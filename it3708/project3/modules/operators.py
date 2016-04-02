@@ -100,35 +100,6 @@ class Phenotype(object):
         return settings.PHENOTYPE_FUNCTION(genotype)
 
     @staticmethod
-    def bitstring_phenotype(genotype):
-        """
-        Translates a genotype into a bitstring phenotype
-        :param genotype: A list of 0's and 1's
-        :return: A phenotype represented as a string of bit values (0 or 1)
-        """
-
-        return ''.join(map(str, map(int, genotype)))
-
-    @staticmethod
-    def integer_bitstring_phenotype(genotype):
-        """
-        Translates a genotype into a list of integers
-        :param genotype: A list of 0's and 1's
-        :return: A phenotype represented as a list of integer values
-        """
-
-        bitstring_ptype = Phenotype.bitstring_phenotype(genotype)
-        phenotype = []
-        for i in range(0, settings.GENOME_LENGTH, 6):
-            phenotype.append(int(bitstring_ptype[i:i+6], 2) % settings.SURPRISING_SEQUENCE_S)
-
-        return phenotype
-
-    @staticmethod
-    def integer_sequence_phenotype(genotype):
-        return genotype[:]
-
-    @staticmethod
     def nnet_weight_tensor(genotype):
         """
         Translate the genotype into the weight tensors needed by the neural network
@@ -136,16 +107,8 @@ class Phenotype(object):
         :return: An array of weights equal in length to the total amount of nodes
         """
 
-        weights = []
-        layers = settings.NETWORK_STRUCTURE.copy()
-
-        start = 0
-        while layers:
-            layer = np.array(genotype[start:layers.pop(0)], dtype='float')
-            size = len(layer)
-            layer -= int(size / 2)
-            avg = layer.sum() / size
-            layer /= avg + 0.01
-            weights.append(layer)
+        weights = np.array(genotype[:], dtype='float')
+        weights -= len(weights) / 2.0
+        weights /= settings.WEIGHT_GRANULARITY
 
         return weights

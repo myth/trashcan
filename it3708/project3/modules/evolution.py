@@ -6,7 +6,7 @@ from logging import getLogger
 
 import settings
 
-from modules.flatland import FOOD, POISON, FlatLand
+from modules.flatland import FOOD, POISON, Agent, FlatLand
 from modules.nnet import NeuralNetwork
 from modules.population import Population
 
@@ -26,6 +26,7 @@ class EvolutionLoop(object):
         self.__run__ = 0
         self.__running__ = False
         self._log = getLogger(__name__)
+        self.nn = NeuralNetwork()
 
         self.adults = Population(0, settings.GENOME_LENGTH, evolution_loop=self)
         self.children = Population(settings.MAX_CHILD_POOL_SIZE, settings.GENOME_LENGTH, evolution_loop=self)
@@ -46,6 +47,9 @@ class EvolutionLoop(object):
             if settings.ENABLE_LOGGING:
                 self._log.info('Processing generation %d' % self.__generation__)
 
+            if settings.FLATLAND_DYNAMIC or self.__generation__ == 0:
+                settings.FLATLANDS = [FlatLand() for i in range(settings.FLATLAND_SCENARIOS)]
+
             # Let the children grow up
             # Assess fitness
             self._update_fitness(self.children)
@@ -63,23 +67,27 @@ class EvolutionLoop(object):
 
             # Adult phase
             self._apply_parent_selection()
-            self._apply_mutations(self.adults.individuals)
             self._apply_mutations(self.children.individuals)
+            self._apply_mutations(self.adults.individuals)
 
             # Check if we have reached our limit
             if self.__generation__ >= settings.MAX_GENERATIONS:
                 self.stop()
 
-        agent = self.adults.most_fit.agent
-        agent.flatland = FlatLand()
-        nn = NeuralNetwork()
-        nn.set_weights(self.adults.most_fit.phenotype)
+        # Set the NN weights to that of best individual
+        self.nn.set_weights(self.adults.most_fit.phenotype)
+        for i in range(settings.FLATLAND_SCENARIOS):
+            if settings.FLATLAND_DYNAMIC:
+                agent = Agent()
+            else:
+                agent = Agent(flatland=settings.FLATLANDS[i])
 
-        nn.test(agent.sense())
-        print('FOOD: %d' % agent.stats[FOOD])
-        print('POISON: %d' % agent.stats[POISON])
+            agent.run(self.nn, timesteps=60)
 
-        return self.results
+            print('FOOD: %d' % agent.stats[FOOD])
+            print('POISON: %d' % agent.stats[POISON])
+
+        return self.adults.most_fit
 
     def stop(self):
         """
@@ -138,7 +146,7 @@ class EvolutionLoop(object):
         Helper method that applies stochastic mutation onto the individuals in the population.
         """
 
-        if settings.ENABLE_LOGGING:
+        if settings.ENABLE_LOGGING and settings.VERBOSE_DEBUG:
             getLogger(__name__).debug('Applying mutations on pool')
 
         for individual in pool:
