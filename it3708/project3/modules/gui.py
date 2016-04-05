@@ -5,10 +5,13 @@
 import logging
 import tkinter as tk
 
+import matplotlib.pyplot as plt
 import numpy as np
 import settings
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from modules.flatland import FOOD, PLAYER, POISON
+from modules.evolution import EvolutionLoop
+from modules.flatland import FOOD, PLAYER, POISON, Agent
 
 
 class Controller(object):
@@ -28,9 +31,93 @@ class Controller(object):
         self.scenarios_menu = None
         self.agent = None
         self._options = {
-            'scenarios': 1,
-            'dynamic': False
+            'scenarios': settings.FLATLAND_SCENARIOS,
+            'dynamic': settings.FLATLAND_DYNAMIC
         }
+
+    def run(self):
+        """
+        Run an agent through the FlatLand scenario(s) given current settings
+        """
+
+        frame = self.frame
+        el = EvolutionLoop()
+        self.set('ea_loop', el)
+
+        # Define EA generational statistics plot function
+        def update_plot(results):
+            """
+            Update the Matplotlib plot with history up until the current generation
+            :param results: History of results so far
+            """
+
+            self._log.debug('Updating plot with results: %s' % results)
+
+            gen = []
+            avg_fit = []
+            std_dev = []
+            max_fit = []
+            for r in results:
+                g, a, s, m = r
+                gen.append(g)
+                avg_fit.append(a)
+                std_dev.append(s)
+                max_fit.append(m)
+
+            # Grab our canvas plot references and clear 'em
+            fig, ax1, ax2 = frame.fig, frame.ax1, frame.ax2
+            ax1.clear()
+            ax2.clear()
+
+            ax1.plot(gen, max_fit, '-', color='g', label='MaxFit')
+            ax1.plot(gen, avg_fit, '--', color='b', label='Avg.Fit')
+            ax1.set_xlabel('Generation', color='black')
+            ax1.set_ylabel('Fitness', color='blue')
+            for tl in ax1.get_yticklabels():
+                tl.set_color('b')
+
+            ax2.plot(gen, std_dev, '--', color='r', label='Std.Dev')
+            ax2.set_ylabel('Std.Dev', color='r')
+            for tl in ax2.get_yticklabels():
+                tl.set_color('r')
+
+            ax1.legend(bbox_to_anchor=(0., 1.02, 1., .102), mode='expand', ncol=3, loc=3, borderaxespad=0.)
+            frame.plot.draw()
+
+        # Yield through each generation and update plot accordingly
+        for res in el.start():
+            update_plot(res)
+
+        # Define flatland demo display function
+        def run_flatland(i):
+            """
+            Async function that runs an agent through one FlatLand instance while drawing progress
+            """
+            agent = Agent(flatland=settings.FLATLANDS[i])
+            self.agent = agent
+            frame.draw_agent(agent)
+
+            # Define an update function that moves the agent one step forward each UPDATE_INTERVAL
+            def move_agent(flatland_index=i):
+                """
+                Async function that moves an agent one step forward in the recommended direction (from NNet)
+                and draws the changes onto the canvas
+                """
+
+                move = [agent.forward, agent.left, agent.right][np.argmax(el.nn.test(agent.sense()))]
+                move()
+                frame.draw_agent(agent)
+                if agent.steps < 60:
+                    frame.after(settings.GUI_UPDATE_INTERVAL, move_agent)
+                else:
+                    flatland_index += 1
+                    if flatland_index < settings.FLATLAND_SCENARIOS:
+                        frame.after(1500, lambda: run_flatland(flatland_index))
+
+            frame.after(settings.GUI_UPDATE_INTERVAL, move_agent)
+
+        # Start the agent on the first FlatLand instance
+        run_flatland(0)
 
     def set(self, key, val):
         """
@@ -60,6 +147,7 @@ class Controller(object):
         om.entryconfig(1, state=tk.DISABLED)
 
         self.set('dynamic', True)
+        settings.FLATLAND_DYNAMIC = True
         self.get('mode_stringvar').set('Mode: dynamic')
         self._log.info('Dynamic mode enabled')
 
@@ -73,6 +161,7 @@ class Controller(object):
         om.entryconfig(1, state=tk.NORMAL)
 
         self.set('dynamic', False)
+        settings.FLATLAND_DYNAMIC = False
         self.get('mode_stringvar').set('Mode: static')
         self._log.info('Static mode enabled')
 
@@ -86,6 +175,7 @@ class Controller(object):
         sm.entryconfig(1, state=tk.NORMAL)
 
         self.set('scenarios', 1)
+        settings.FLATLAND_SCENARIOS = 1
         self.get('scenarios_stringvar').set('Scenarios: %d' % 1)
         self._log.info('Number of scenarios set to 1')
 
@@ -99,6 +189,7 @@ class Controller(object):
         sm.entryconfig(1, state=tk.DISABLED)
 
         self.set('scenarios', 5)
+        settings.FLATLAND_SCENARIOS = 5
         self.get('scenarios_stringvar').set('Scenarios: %d' % 5)
         self._log.info('Number of scenarios set to 5')
 
@@ -139,7 +230,7 @@ class Main(tk.Frame):
     """
 
     def __init__(self, master=None):
-        tk.Frame.__init__(self, master)
+        super(Main, self).__init__(master=master)
 
         self._log = logging.getLogger(__name__)
         self.game = None
@@ -219,9 +310,7 @@ class Main(tk.Frame):
         sensations = agent.sense()
         net_results = nn.test(sensations)
         recommended = np.argmax(net_results)
-        print(sensations)
-        print(net_results)
-        print(recommended)
+
         self.controller.get('recommended').set(
             'Recommended: %s' % ['Forward', 'Left', 'Right'][recommended]
         )
@@ -257,6 +346,9 @@ class Main(tk.Frame):
 
         # Set up the sidebar
         self._init_sidebar()
+
+        # Set up plot
+        self._init_plot()
 
         # Set up listeners for arrow keys
         self._init_event_listeners()
@@ -371,8 +463,25 @@ class Main(tk.Frame):
         recommended_label.pack(fill=tk.X)
         self.controller.set('recommended', recommended_stringvar)
 
+        # Add run button
+        go_button = tk.Button(master=self.sidebar, text='Run!', command=lambda: self.controller.run())
+        go_button.pack(fill=tk.X)
+
         # Pack the entire sidebar
         self.sidebar.pack(side=tk.LEFT, padx=15, pady=15, ipadx=15, ipady=15, fill=tk.BOTH, expand=1)
+
+    def _init_plot(self):
+        """
+        Sets up the MatPlotLib frame
+        """
+
+        self.fig, self.ax1 = plt.subplots()
+        self.ax2 = self.ax1.twinx()
+        self.plot = FigureCanvasTkAgg(self.fig, master=self)
+        self.plot.get_tk_widget().config(width=500, height=400)
+        self.plot.get_tk_widget().pack(side=tk.RIGHT)
+        self.controller.set('plot', self.plot)
+        plt.subplots_adjust(right=0.85)
 
     def _init_event_listeners(self):
         """

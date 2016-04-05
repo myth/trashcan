@@ -60,10 +60,13 @@ class EvolutionLoop(object):
             if settings.ENABLE_LOGGING:
                 self._log.info('Mean: %f Std.Dev: %f' % (self.adults.avg_fitness, self.adults.std_dev))
                 self._log.info('Most fit individual: %s' % self.adults.most_fit)
+
             # Do some statistics gathering
             self.results.append(
                 (self.__generation__, self.adults.avg_fitness, self.adults.std_dev, self.adults.most_fit.fitness)
             )
+            # Yield the current history, to plot the graph as we go
+            yield self.results
 
             # Adult phase
             self._apply_parent_selection()
@@ -76,18 +79,6 @@ class EvolutionLoop(object):
 
         # Set the NN weights to that of best individual
         self.nn.set_weights(self.adults.most_fit.phenotype)
-        for i in range(settings.FLATLAND_SCENARIOS):
-            if settings.FLATLAND_DYNAMIC:
-                agent = Agent()
-            else:
-                agent = Agent(flatland=settings.FLATLANDS[i])
-
-            agent.run(self.nn, timesteps=60)
-
-            print('FOOD: %d' % agent.stats[FOOD])
-            print('POISON: %d' % agent.stats[POISON])
-
-        return self.adults.most_fit
 
     def stop(self):
         """

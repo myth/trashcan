@@ -68,6 +68,8 @@ class Neuron(object):
         # Set value of each node as the weighted average of all incoming signals
         self.output = self.af(np.sum(self.weights * incoming))
 
+        return self.output
+
     def __str__(self):
         """
         String representation of this neuron
@@ -93,7 +95,7 @@ class Layer(object):
         String representation of this layer
         """
 
-        return '--- Layer ---\n%s' % ('\n'.join(str(n) for n in self.neurons))
+        return '--- %s ---\n%s' % (self.__class__.__name__, '\n'.join(str(n) for n in self.neurons))
 
 
 class InputLayer(Layer):
