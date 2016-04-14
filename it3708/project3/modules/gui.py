@@ -108,13 +108,13 @@ class Controller(object):
                 move()
                 frame.draw_agent(agent)
                 if agent.steps < 60:
-                    frame.after(settings.GUI_UPDATE_INTERVAL, move_agent)
+                    frame.after(self.get('gui_interval').get(), move_agent)
                 else:
                     flatland_index += 1
                     if flatland_index < settings.FLATLAND_SCENARIOS:
                         frame.after(1500, lambda: run_flatland(flatland_index))
 
-            frame.after(settings.GUI_UPDATE_INTERVAL, move_agent)
+            frame.after(self.get('gui_interval').get(), move_agent)
 
         # Start the agent on the first FlatLand instance
         run_flatland(0)
@@ -466,6 +466,12 @@ class Main(tk.Frame):
         # Add run button
         go_button = tk.Button(master=self.sidebar, text='Run!', command=lambda: self.controller.run())
         go_button.pack(fill=tk.X)
+
+        # GUI Update interval slider
+        scale = tk.Scale(self.sidebar, from_=30, to=1000, orient=tk.HORIZONTAL)
+        scale.set(settings.GUI_UPDATE_INTERVAL)
+        scale.pack()
+        self.controller.set('gui_interval', scale)
 
         # Pack the entire sidebar
         self.sidebar.pack(side=tk.LEFT, padx=15, pady=15, ipadx=15, ipady=15, fill=tk.BOTH, expand=1)
