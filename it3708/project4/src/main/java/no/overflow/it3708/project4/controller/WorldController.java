@@ -172,14 +172,9 @@ public class WorldController {
             timeline = new Timeline(updateFrame);
         }
         Platform.runLater(() -> {
-            core.nnet = new NeuralNetwork();
             core.ea = new EAController(core);
+            core.nnet = new NeuralNetwork();
             core.nnet.reconfigure(core.ea.evolveNeuralNetwork().translate());
-            System.out.println(core.nnet);
-            System.out.println(Arrays.toString(core.nnet.fire(new double[]{0.0, 1.0, 1.0, 0.0, 0.0})));
-            System.out.println(Arrays.toString(core.nnet.fire(new double[]{0.0, 1.0, 1.0, 0.0, 0.0})));
-            System.out.println(Arrays.toString(core.nnet.fire(new double[]{0.0, 1.0, 1.0, 0.0, 0.0})));
-            System.out.println(Arrays.toString(core.nnet.fire(new double[]{0.0, 1.0, 1.0, 0.0, 0.0})));
         });
     }
 

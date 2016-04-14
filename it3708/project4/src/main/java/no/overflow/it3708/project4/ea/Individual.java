@@ -153,7 +153,7 @@ public class Individual {
             fitness /= 1 + (board.agent.numMissed * MISSED_W + board.agent.numStruck * FAILED_W);
         } else if (Board.WRAP && Board.PULL) {
             MISSED_W = 2.0;
-            FAILED_W = 38.0; // 35.0
+            FAILED_W = 42.0; // 36.0
             fitness += Math.pow(board.agent.numCaptured, 2);
             fitness /= 1 + (board.agent.numMissed * MISSED_W + board.agent.numStruck * FAILED_W);
         }

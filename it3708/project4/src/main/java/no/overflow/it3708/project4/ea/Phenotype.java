@@ -33,6 +33,9 @@ public class Phenotype {
             gain *= 1.1;
         } else if (Board.WRAP && !Board.PULL) {
             gain *= 1.2;
+        } else {
+            gain *= 1.3;
+            time *= 0.8;
         }
 
         offset = offset + 3;
