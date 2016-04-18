@@ -72,7 +72,7 @@ public class Board {
     }
 
     public void tick() {
-        if (block.y == agent.y) {
+        if (block.y == agent.y - 1) {
             double[] sns = sense();
             int offset = 0;
             if (!Board.WRAP) offset = 1;

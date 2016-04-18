@@ -126,6 +126,7 @@ public class Individual {
             double[] results = nn.fire(board.sense());
             int maxIndex = Tools.argMax(results);
             int steps = Tools.moveIntensity(results[0], results[1]);
+
             switch (maxIndex) {
                 case 0:
                     board.left(steps);
@@ -147,15 +148,16 @@ public class Individual {
             fitness += board.agent.numCaptured;
             fitness /= 1 + (board.agent.numMissed + board.agent.numStruck * 2);
         } else if (!Board.WRAP) {
-            FAILED_W = 3.5;
+
+            FAILED_W = 4.5;
             MISSED_W = 2.0;
             fitness += board.agent.numCaptured * 5;
             fitness /= 1 + (board.agent.numMissed * MISSED_W + board.agent.numStruck * FAILED_W);
+
         } else if (Board.WRAP && Board.PULL) {
             MISSED_W = 2.0;
-            FAILED_W = 42.0; // 36.0
-            fitness += Math.pow(board.agent.numCaptured, 2);
-            fitness /= 1 + (board.agent.numMissed * MISSED_W + board.agent.numStruck * FAILED_W);
+            fitness = Math.pow(board.agent.numCaptured, 2) + board.agent.numAvoided;
+            fitness /= 1 + Math.pow(board.agent.numStruck, 1.8) + board.agent.numMissed;
         }
 
         // Reset the dirty flag

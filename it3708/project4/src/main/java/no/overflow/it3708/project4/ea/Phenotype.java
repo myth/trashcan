@@ -29,13 +29,12 @@ public class Phenotype {
         gain = (((double) genotype[offset + 2] / EvolutionaryLoop.GENOME_GRANULARITY) * 4.0) + 1.0;
 
         if (!Board.WRAP) {
-            time *= 1.5;
-            gain *= 1.1;
+            time *= 1.2;
         } else if (Board.WRAP && !Board.PULL) {
             gain *= 1.2;
-        } else {
-            gain *= 1.3;
-            time *= 0.8;
+        } else if (Board.PULL) {
+            gain *= 1.2;
+            time *= 0.9;
         }
 
         offset = offset + 3;

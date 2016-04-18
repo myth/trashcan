@@ -21,7 +21,7 @@ public class EvolutionaryLoop {
     public static final int CHILD_POOL_SIZE = 200;
     public static final int ADULT_POOL_SIZE = 150;
     public static final int ELITISM = 20;
-    public static final double MUTATION_RATE = 0.8;
+    public static final double MUTATION_RATE = 0.95; // 0.8
     public static final double COMPONENT_MUTATION_RATE = 0.25;
     public static final double CROSSOVER_RATE = 0.9;
     public static final int TOURNAMENT_SELECTION_K = 10;
