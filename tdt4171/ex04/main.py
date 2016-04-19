@@ -9,9 +9,10 @@ class Node:
     Node object. You know, like trees
     """
 
-    def __init__(self, label):
+    def __init__(self, label, i=0):
         self.label = label
         self.children = {}
+        self.ID = i
 
     def __str__(self):
         """
@@ -19,7 +20,7 @@ class Node:
         :return: This node and its children as a string
         """
 
-        return 'Node[%s] Children: %d' % (self.label, len(self.children))
+        return 'Node[%d] Label: %d' % (self.ID, self.label)
 
     def __repr__(self):
         """
@@ -40,6 +41,7 @@ class DecisionTreeLearning(object):
         self.testing = get_data(training=False)
         self.random = False
         self.tree = None
+        self.id_counter = 0
 
     def classify(self, obj):
         """
@@ -99,15 +101,17 @@ class DecisionTreeLearning(object):
         :return: A tree
         """
 
+        self.id_counter += 1
+
         if not examples:
-            return Node(plurality_value(parent_examples))
+            return Node(plurality_value(parent_examples), self.id_counter)
         elif self._check_classifiability(examples):
-            return Node(examples[0][-1])
+            return Node(examples[0][-1], self.id_counter)
         elif sum(attributes) == 0:
-            return Node(plurality_value(examples))
+            return Node(plurality_value(examples), self.id_counter)
         else:
             a = 1 + self._importance(examples, attributes)
-            tree = Node(a)
+            tree = Node(a, self.id_counter)
 
             for i in range(2):
                 subset_examples = list(filter(lambda x: x[a] == i, examples))
@@ -128,6 +132,24 @@ class DecisionTreeLearning(object):
             return argmax(0 if a == 0 else random() for a in attributes)
         else:
             return argmax(importance(a, examples) for a in attributes)
+
+    def __str__(self):
+        """
+        String representation of this DecisionTreeLearner
+        :return: A string
+        """
+
+        output = '--- Decision Tree ---------\n'
+        stack = [(self.tree, 0)]
+        while stack:
+            n, i = stack.pop()
+            output += '\t' * i + '- %s\n' % n
+
+            if n.children:
+                for x in n.children.values():
+                    stack.append((x, i+1))
+
+        return output
 
 
 def argmax(sequence):
@@ -224,6 +246,30 @@ def plurality_value(examples):
         return randint(0, 1)
 
 
+def hierarchy_pos(G, root, width=1.0, vert_gap=0.05, vert_loc=0, xcenter=0.2, pos=None, parent=None):
+    """
+    If there is a cycle that is reachable from root, then this will see infinite recursion.
+    """
+    if pos is None:
+        pos = {root: (xcenter, vert_loc)}
+    else:
+        pos[root] = (xcenter, vert_loc)
+    neighbors = G.neighbors(root)
+    if parent is not None:
+        neighbors.remove(parent)
+    if len(neighbors) != 0:
+        dx = width / len(neighbors)
+        nextx = xcenter - width / 2 - dx / 2
+    for neighbor in neighbors:
+        nextx += dx
+        pos = hierarchy_pos(
+            G, neighbor, width=dx, vert_gap=vert_gap,
+            vert_loc=vert_loc - vert_gap, xcenter=nextx, pos=pos,
+            parent=root
+        )
+    return pos
+
+
 def main():
     """
     Main method
@@ -233,6 +279,7 @@ def main():
     print('Random Importance')
     dtl.random = True
     dtl.train()
+    print(dtl)
     score = dtl.test()
 
     print('\nRandom test score: %.2f\n' % score)
@@ -240,6 +287,7 @@ def main():
     print('Entropy Importance')
     dtl.random = False
     dtl.train()
+    print(dtl)
     score = dtl.test()
 
     print('\nInformation Gain test score: %.2f\n' % score)
