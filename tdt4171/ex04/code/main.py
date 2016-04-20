@@ -1,5 +1,9 @@
 # -*- coding=utf-8 -*-
 
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+import networkx as nx
 import math
 from random import randint, random
 
@@ -76,7 +80,7 @@ class DecisionTreeLearning(object):
         Train this decision tree
         """
 
-        self.tree = self._dtl(self.training, list(range(1, 8)), list())
+        self.tree = self._dtl(self.training, list(range(0, 7)), list())
 
         return self.tree
 
@@ -110,12 +114,15 @@ class DecisionTreeLearning(object):
         elif sum(attributes) == 0:
             return Node(plurality_value(examples), self.id_counter)
         else:
-            a = 1 + self._importance(examples, attributes)
+            a = self._importance(examples, attributes)
             tree = Node(a, self.id_counter)
+
+            attrs = attributes[:]
+            attrs.pop(a)
 
             for i in range(2):
                 subset_examples = list(filter(lambda x: x[a] == i, examples))
-                subtree = self._dtl(subset_examples, attributes, examples)
+                subtree = self._dtl(subset_examples, attrs, examples)
                 tree.children[i] = subtree
 
             return tree
@@ -131,7 +138,7 @@ class DecisionTreeLearning(object):
         if self.random:
             return argmax(0 if a == 0 else random() for a in attributes)
         else:
-            return argmax(importance(a, examples) for a in attributes)
+            return argmax(importance(x, examples) for x in attributes)
 
     def __str__(self):
         """
@@ -222,6 +229,8 @@ def importance(a, examples):
     for obj in (j, k):
         p = len(list(filter(lambda o: o[-1], obj)))
         n = len(list(filter(lambda o: not o[-1], obj)))
+        if p == 0 and n == 0:
+            return 0
         e = (p + n) / (tot_pos + tot_neg)
         total_entropy += e * b(p / (p + n))
 
@@ -284,6 +293,17 @@ def main():
 
     print('\nRandom test score: %.2f\n' % score)
 
+    g = nx.Graph()
+    q = [dtl.tree]
+    while q:
+        n = q.pop()
+        for c in n.children.values():
+            q.append(c)
+            g.add_edge(n.ID, c.ID)
+
+    nx.draw(g, pos=hierarchy_pos(g, dtl.tree.ID))
+    plt.show()
+
     print('Entropy Importance')
     dtl.random = False
     dtl.train()
@@ -291,6 +311,17 @@ def main():
     score = dtl.test()
 
     print('\nInformation Gain test score: %.2f\n' % score)
+
+    g = nx.Graph()
+    q = [dtl.tree]
+    while q:
+        n = q.pop()
+        for c in n.children.values():
+            q.append(c)
+            g.add_edge(n.ID, c.ID)
+
+    nx.draw(g, pos=hierarchy_pos(g, dtl.tree.ID))
+    plt.show()
 
 if __name__ == "__main__":
     main()
