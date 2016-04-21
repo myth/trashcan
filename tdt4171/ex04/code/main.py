@@ -95,12 +95,10 @@ class DecisionTreeLearner(object):
             attributes.remove(a)
 
             for n in range(2):
-                liste = []
-                for e in examples:
-                    if e[a] == n:
-                        liste.append(e)
-                sub_tree = self._dtl(liste, list(attributes), examples)
+                sub_ex = list(filter(lambda ex: ex[a] == n, examples))
+                sub_tree = self._dtl(sub_ex, list(attributes), examples)
                 tree.children[n] = sub_tree
+
             return tree
 
 
