@@ -2,25 +2,21 @@
 
 import math
 import random
-import copy
 
 
 # The transfer function of neurons, g(x)
 def log_func(x):
-    return 1.0 / (1.0+math.exp(-x))
+    return 1.0 / (1.0 + math.exp(-x))
 
 
 # The derivative of the transfer function, g'(x)
 def log_func_derivative(x):
-    return math.exp(-x)/(pow(math.exp(-x)+1, 2))
+    return math.exp(-x) / pow(math.exp(-x) + 1.0, 2)
 
 
 # Initializes a matrix of all zeros
 def make_matrix(i, j):
-    m = []
-    for x in range(i):
-        m.append([0] * j)
-    return m
+    return [[0] * j for x in range(i)]
 
 
 class NN(object):
@@ -72,13 +68,13 @@ class NN(object):
             raise ValueError('wrong number of inputs')
 
         # input activations
-        self.prev_input_activations = copy.deepcopy(self.input_activation)
+        self.prev_input_activations = self.input_activation[:]  # Deepcopy
         for i in range(self.num_inputs - 1):
             self.input_activation[i] = inputs[i]
         self.input_activation[-1] = 1  # Set bias node to -1.
 
         # hidden activations
-        self.prev_hidden_activations = copy.deepcopy(self.hidden_activations)
+        self.prev_hidden_activations = self.hidden_activations[:]  # Deepcopy
         for j in range(self.num_hidden):
             tot = 0.0
             for i in range(self.num_inputs):
@@ -96,21 +92,64 @@ class NN(object):
         return self.output_activation
 
     def compute_output_delta(self):
-        # TODO: Implement the delta function for the output layer (see exercise text)
+        """
+        Computes the error deltas in the output layer and updates the prev_delta_output and delta_output fields.
+        :return: None
+        """
 
-        pass
+        delta = self.prev_output_activation - self.output_activation
+        p_ab = log_func(delta)
+
+        self.prev_delta_output = log_func_derivative(self.prev_output_activation) * (1.0 - p_ab)
+        self.delta_output = log_func_derivative(self.output_activation) * (1.0 - p_ab)
 
     def compute_hidden_delta(self):
-        # TODO: Implement the delta function for the hidden layer (see exercise text)
+        """
+        Computes the error deltas in the hidden layer and updates the prev_delta_hidden and delta_hidden fields.
+        :return: None
+        """
 
-        pass
+        # Apply the update function on each node
+        for i in range(self.num_hidden):
+            # Update the previous delta array
+            self.prev_delta_hidden[i] = log_func_derivative(
+                self.prev_hidden_activations[i]
+            ) * self.weights_output[i] * (self.prev_delta_output - self.delta_output)
+
+            # Update the last delta array
+            self.delta_hidden[i] = log_func_derivative(
+                self.hidden_activations[i]
+            ) * self.weights_output[i] * (self.prev_delta_output - self.delta_output)
 
     def update_weights(self):
-        # TODO: Update the weights of the network using the deltas (see exercise text)
+        """
+        Computes new weights based on error deltas and learning rate, and updates the weight arrays.
+        :return: None
+        """
 
-        pass
+        for ii in range(self.num_inputs):
+            for hi in range(self.num_hidden):
+                diff = self.learning_rate * (
+                    self.prev_delta_hidden[hi] * self.prev_input_activations[ii] -
+                    self.delta_hidden[hi] * self.input_activation[ii]
+                )
+
+                self.weights_input[ii][hi] += diff
+
+        for hi in range(self.num_hidden):
+            diff = self.learning_rate * (
+                self.prev_hidden_activations[hi] * self.prev_delta_output -
+                self.hidden_activations[hi] * self.delta_output
+            )
+
+            self.weights_output[hi] += diff
 
     def backpropagate(self):
+        """
+        Performs the backpropagation algorithm on the current state of the NN
+        :return: None
+        """
+
         self.compute_output_delta()
         self.compute_hidden_delta()
         self.update_weights()
@@ -124,27 +163,57 @@ class NN(object):
         print('Output weights:')
         print(self.weights_output)
 
-    def train(self, patterns, iterations=1):
-        # TODO: Train the network on all patterns for a number of iterations.
-        # To measure performance each iteration: Run for 1 iteration, then count misordered pairs.
-        # TODO: Training is done  like this (details in exercise text):
-        # - Propagate A
-        # - Propagate B
-        # - Backpropagate
+    def train(self, patterns, iterations=1, test_patterns=None):
+        """
+        Trains the network based on the provided patterns
+        :param patterns: A list of pairs
+        :param iterations: How many iterations of training on the entire pattern list
+        :param test_patterns: A list of test pairs to evaluate network performance
+        :return: None
+        """
 
-        pass
+        for i in range(1, iterations + 1):
+            print('=== Iteration: %d ============================' % i)
+            for pair in patterns:
+                a, b = pair
+
+                self.propagate(a.features)
+                self.propagate(b.features)
+                self.backpropagate()
+
+            print('--- Training pattern stats ------------------')
+            train_error = self.count_misordered_pairs(patterns)
+
+            if test_patterns:
+                print('--- Test pattern stats ----------------------')
+                test_error = self.count_misordered_pairs(test_patterns)
+
+                yield train_error, test_error
+
+            else:
+                yield train_error
 
     def count_misordered_pairs(self, patterns):
-        # TODO: Let the network classify all pairs of patterns. The highest output determines the winner.
-        # for each pair, do
-        # Propagate A
-        # Propagate B
-        # if A>B: A wins. If B>A: B wins
-        # if rating(winner) > rating(loser): numRight++
-        # else: numMisses++
-        # end of for
+        """
+        Calculate the amount of pairs that are place in incorrect order
+        :param patterns: A list of pairs
+        :return: The error rate as a fraction 0 <= x <= 1
+        """
 
-        # TODO: Calculate the ratio of correct answers:
-        # errorRate = numMisses/(numRight+numMisses)
+        miss = 0
+        for a, b in patterns:
+            if a.rating == b.rating:
+                print('Equal rating, panix')
 
-        pass
+            self.propagate(a.features)
+            self.propagate(b.features)
+
+            if self.prev_output_activation > self.output_activation:
+                miss += int(a.rating < b.rating)
+            else:
+                miss += int(b.rating < a.rating)
+
+        print('Misordered pairs: %d' % miss)
+        print('Error rate: %.3f' % (miss / len(patterns)))
+
+        return miss / len(patterns)

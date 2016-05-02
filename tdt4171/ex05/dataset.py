@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import matplotlib
 import nnet
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 __author__ = 'kaiolae'
 
@@ -14,7 +17,10 @@ class DataInstance(object):
         self.features = features  # The features of this query-site pair.
 
     def __str__(self):
-        return "DataInstance - qid: %s. rating: %s. features: %s" % (self.qid, self.rating, self.features)
+        return "\nDataInstance - qid: %s\nrating: %s\nfeatures: %s" % (self.qid, self.rating, self.features)
+
+    def __repr__(self):
+        return self.__str__()
 
 
 # A class that holds all the data in one of our sets (the training set or the testset)
@@ -49,53 +55,79 @@ class DataHolder(object):
         return dataset
 
 
-def run_ranker(trainingset, testset):
-    # TODO: Insert the code for training and testing your ranker here.
-
+def run_ranker(trainingset, testset, iterations=25, runs=1):
     # Dataholders for training and testset
     dh_training = DataHolder(trainingset)
     dh_testing = DataHolder(testset)
 
-    # Creating an ANN instance - feel free to experiment with the learning rate (the third parameter).
-    nn = nnet.NN(46, 10, 0.0011)
-
-    # TODO: The lists below should hold training patterns in this format:
-    # [(data1Features,data2Features), (data1Features,data3Features), ... , (dataNFeatures,dataMFeatures)]
-
-    # TODO: The training set needs to have pairs ordered so the first item of the pair has a higher rating.
-
     training_patterns = []  # For holding all the training patterns we will feed the network
     test_patterns = []  # For holding all the test patterns we will feed the network
-    for qid in dh_training.dataset.keys():
-        # This iterates through every query ID in our training set
-        data_instance = dh_training.dataset[qid]  # All data instances (query, features, rating) for query qid
 
-        # TODO: Store the training instances into the trainingPatterns array.
-        # Remember to store them as pairs, where the first item is rated higher than the second.
+    for q, item in dh_training.dataset.items():
+        for a in range(len(item) - 1):
+            for b in range(a + 1, len(item)):
+                if item[a].rating == item[b].rating:
+                    continue
 
-        # TODO: Hint: A good first step to get the pair ordering right,
-        # is to sort the instances based on their rating for this query. (sort by x.rating for each x in dataInstance)
+                training_patterns.append((
+                    max(item[a], item[b], key=lambda x: x.rating),
+                    min(item[a], item[b], key=lambda x: x.rating)
+                ))
 
-    for qid in dh_testing.dataset.keys():
-        # This iterates through every query ID in our test set
-        data_instance = dh_testing.dataset[qid]
+    for q, item in dh_testing.dataset.items():
+        for a in range(len(item) - 1):
+            for b in range(a + 1, len(item)):
+                if item[a].rating == item[b].rating:
+                    continue
 
-        # TODO: Store the test instances into the testPatterns array, once again as pairs.
+                test_patterns.append((
+                    max(item[a], item[b], key=lambda x: x.rating),
+                    min(item[a], item[b], key=lambda x: x.rating)
+                ))
 
-        # TODO: Hint: The testing will be easier for you if you also now order the pairs,
-        # it will make it easy to see if the ANN agrees with your ordering.
+    # Verify dataset integrity
+    for pair in training_patterns:
+        a, b = pair
+        assert a.rating > b.rating
+    for pair in test_patterns:
+        a, b = pair
+        assert a.rating > b.rating
 
-    # Check ANN performance before training
-    nn.countMisorderedPairs(test_patterns)
-    for i in range(25):
-        # Running 25 iterations, measuring testing performance after each round of training.
-        # Training
-        nn.train(training_patterns)
-        # Check ANN performance after training.
-        nn.countMisorderedPairs(test_patterns)
+    results = []
+    for i in range(1, runs + 1):
+        # Create new network for each run
+        nn = nnet.NN(46, 10, learning_rate=0.0012)
 
-    # TODO: Store the data returned by countMisorderedPairs and plot it,
-    # showing how training and testing errors develop.
+        # Store each (train, test) error tuple for later plotting
+        results.append(
+            [e for e in nn.train(training_patterns, iterations=iterations, test_patterns=test_patterns)]
+        )
+
+    train_averages = []
+    test_averages = []
+    for i in range(iterations):
+        tot_train = 0.0
+        tot_test = 0.0
+        for r in range(runs):
+            train, test = results[r][i]
+
+            tot_train += train
+            tot_test += test
+
+        train_averages.append(1.0 - tot_train / runs)
+        test_averages.append(1.0 - tot_test / runs)
+
+    epochs = list(map(lambda x: x+1, range(iterations)))
+    plt.plot(epochs, train_averages, 'r-', label='Training')
+    plt.plot(epochs, test_averages, 'b-', label='Testing')
+    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+    plt.xlabel('Epoch')
+    plt.ylabel('Correctness')
+    axes = plt.gca()
+    axes.set_xlim([0, 20])
+    axes.set_ylim([0.0, 1.0])
+    plt.show()
 
 
-run_ranker("train.txt", "test.txt")
+if __name__ == '__main__':
+    run_ranker('train.txt', 'test.txt', runs=5, iterations=20)
