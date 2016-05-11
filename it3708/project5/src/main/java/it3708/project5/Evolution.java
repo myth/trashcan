@@ -90,25 +90,23 @@ public class Evolution extends SwingWorker<Population, Population> {
             // Establish base next generation
             Population next = new Population(0);
             int i = 0;
-
             while (next.getSize() + this.population.fronts.get(i).size() <= Main.POPULATION_SIZE) {
                 Population.crowdingDistanceAssignment(this.population.fronts.get(i));
-                next.merge(this.population.fronts.get(i));
-                i++;
+                next.merge(this.population.fronts.get(i++));
             }
 
             // Add remaining crowding distance sorted individuals from last rank
             Population.crowdingDistanceAssignment(this.population.fronts.get(i));
             this.population.fronts.get(i).sort(Selection::crowdingOperator);
-            for (int x = 0; x < Main.POPULATION_SIZE - next.getSize(); x++) {
-                next.pool.add(this.population.fronts.get(i).get(x));
+            int x = 0;
+            while (next.getSize() + 1 < Main.POPULATION_SIZE) {
+                next.pool.add(this.population.fronts.get(i).get(x++));
             }
 
             // Publish latest population
             if (generation % Main.GUI_GENERATION_UPDATE == 0) publish(this.population);
 
             // Advance to next population and make them babies
-            pareto = this.population.fronts.get(0);
             this.population = next;
             children = this.population.reproduce();
         }
@@ -127,10 +125,13 @@ public class Evolution extends SwingWorker<Population, Population> {
         );
 
         // Print the front
-        pareto.sort((a, b) -> Integer.compare(a.cost, b.cost));
-        for (Individual i : pareto) {
+        population.sort();
+        population.fronts.get(0).sort((a, b) -> Integer.compare(a.cost, b.cost));
+        for (Individual i : population.fronts.get(0)) {
             System.out.println(i);
         }
+        System.out.println("Pareto size: " + population.fronts.get(0).size());
+        System.out.println("Population size: " + population.pool.size());
 
         return population;
     }

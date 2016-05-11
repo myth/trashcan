@@ -29,13 +29,16 @@ import org.slf4j.LoggerFactory;
  * project5 is licenced under the MIT licence.
  */
 public class Main extends JFrame implements EvolutionEventListener {
-    public static final int NUM_GENERATIONS = 2000;
+    public static final int NUM_GENERATIONS = 20000;
     public static final int NUM_CITIES = 48;
-    public static final int POPULATION_SIZE = 500;
-    public static final double MUTATION_RATE = 0.3;
-    public static final int MUTATION_STRENGTH = 8;
-    public static final int TOURNAMENT_SELECTION_K = 40;
-    public static final int GUI_GENERATION_UPDATE = 2;
+    public static final int POPULATION_SIZE = 200;
+    public static final double MUTATION_RATE = 0.5;
+    public static final int MUTATION_STRENGTH = 3;
+    public static final int TOURNAMENT_SELECTION_K = 5;
+    public static final int GUI_GENERATION_UPDATE = 4;
+    public static final boolean GUI_LINE_CHART = true;
+    public static final boolean GUI_PARETO = true;
+    public static final boolean GUI_NON_PARETO = true;
 
     private static final String title = "MTSP";
     public JFreeChart chart;
@@ -92,24 +95,30 @@ public class Main extends JFrame implements EvolutionEventListener {
             1.0f, new float[] {6.0f, 6.0f}, 0.0f
         );
 
-        for (Individual i : p.fronts.get(0)) {
-            pareto.add(i.distance, i.cost);
-        }
-        dataset.addSeries(pareto);
-        if (renderer != null) {
-            renderer.setSeriesShape(0, rect);
-            renderer.setSeriesStroke(0, thickStroke);
+        if (GUI_PARETO) {
+            for (Individual i : p.fronts.get(0)) {
+                pareto.add(i.distance, i.cost);
+            }
+            dataset.addSeries(pareto);
+            if (renderer != null) {
+                renderer.setSeriesShape(0, rect);
+                renderer.setSeriesStroke(0, thickStroke);
+            }
         }
 
-        for (int x = 1; x < p.fronts.size(); x++) {
-            XYSeries front = new XYSeries("Front_" + x);
-            for (Individual i : p.fronts.get(x)) {
-                front.add(i.distance, i.cost);
-            }
-            dataset.addSeries(front);
-            if (renderer != null) {
-                renderer.setSeriesShape(x, ellipse);
-                renderer.setSeriesStroke(x, thinStroke);
+        if (GUI_NON_PARETO) {
+            for (int x = 1; x < p.fronts.size(); x++) {
+                XYSeries front = new XYSeries("Front_" + x);
+                for (Individual i : p.fronts.get(x)) {
+                    front.add(i.distance, i.cost);
+                }
+                dataset.addSeries(front);
+                if (renderer != null) {
+                    int seriesIndex = x;
+                    if (!GUI_PARETO) seriesIndex -= 1;
+                    renderer.setSeriesShape(seriesIndex, ellipse);
+                    renderer.setSeriesStroke(seriesIndex, thinStroke);
+                }
             }
         }
 
@@ -131,16 +140,29 @@ public class Main extends JFrame implements EvolutionEventListener {
     }
 
     private ChartPanel createDemoPanel() {
-        chart = ChartFactory.createXYLineChart(
-            title,
-            "Distance",
-            "Cost",
-            createDataset(new Population(0)),
-            PlotOrientation.VERTICAL,
-            true,
-            true,
-            false
-        );
+        if (GUI_LINE_CHART) {
+            chart = ChartFactory.createXYLineChart(
+                title,
+                "Distance",
+                "Cost",
+                createDataset(new Population(0)),
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false
+            );
+        } else {
+            chart = ChartFactory.createScatterPlot(
+                title,
+                "Distance",
+                "Cost",
+                createDataset(new Population(0)),
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false
+            );
+        }
 
         XYPlot xyPlot = (XYPlot) chart.getPlot();
         this.renderer = xyPlot.getRenderer();
