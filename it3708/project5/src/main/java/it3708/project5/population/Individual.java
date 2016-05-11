@@ -209,7 +209,7 @@ public class Individual {
      * @return A string representing this object containing its ID, and fitness value
      */
     public String toString() {
-        return String.format("Individual[%d] C: %d, D: %d, CD: %.1f, Order: %s", _id, cost, distance, crowdingDistance, Arrays.toString(genotype));
+        return String.format("Individual[%d] C: %d, D: %d, CD: %.3f, Order: %s", _id, cost, distance, crowdingDistance * 10, Arrays.toString(genotype));
     }
 
     /**

@@ -29,12 +29,12 @@ import org.slf4j.LoggerFactory;
  * project5 is licenced under the MIT licence.
  */
 public class Main extends JFrame implements EvolutionEventListener {
-    public static final int NUM_GENERATIONS = 1000;
+    public static final int NUM_GENERATIONS = 2000;
     public static final int NUM_CITIES = 48;
-    public static final int POPULATION_SIZE = 450;
+    public static final int POPULATION_SIZE = 500;
     public static final double MUTATION_RATE = 0.3;
     public static final int MUTATION_STRENGTH = 8;
-    public static final int TOURNAMENT_SELECTION_K = 20;
+    public static final int TOURNAMENT_SELECTION_K = 40;
     public static final int GUI_GENERATION_UPDATE = 2;
 
     private static final String title = "MTSP";
@@ -145,7 +145,7 @@ public class Main extends JFrame implements EvolutionEventListener {
         XYPlot xyPlot = (XYPlot) chart.getPlot();
         this.renderer = xyPlot.getRenderer();
         NumberAxis domain = (NumberAxis) xyPlot.getDomainAxis();
-        domain.setRange(35000, 160000);
+        domain.setRange(35000, 170000);
         domain.setTickUnit(new NumberTickUnit(10000));
         NumberAxis range = (NumberAxis) xyPlot.getRangeAxis();
         range.setRange(300, 1900);
