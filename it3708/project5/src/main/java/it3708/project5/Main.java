@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * project5 is licenced under the MIT licence.
  */
 public class Main extends JFrame implements EvolutionEventListener {
-    public static final int NUM_GENERATIONS = 20000;
+    public static final int NUM_GENERATIONS = 10000;
     public static final int NUM_CITIES = 48;
     public static final int POPULATION_SIZE = 200;
     public static final double MUTATION_RATE = 0.5;
