@@ -5,6 +5,7 @@ import it3708.project5.Main;
 import it3708.project5.Utilities;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,18 +15,24 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * project5 is licenced under the MIT licence.
  */
-public class Individual implements Comparable<Individual> {
+public class Individual {
 
-    private static short[] cities = Individual._generateOrderedCitiesArray();
+    public static short[] cities = Individual._generateOrderedCitiesArray();
     private static AtomicInteger idGenerator = new AtomicInteger();
 
     private int _id;
     private boolean dirty = true;
     private boolean invulnerable = false;
-    private double fitness;
+    public double fitness;
+    public int cost = Integer.MAX_VALUE;
+    public int distance = Integer.MAX_VALUE;
+    public AtomicInteger dominated;
+    public HashSet<Individual> dominates;
+    public double crowdingDistance = 0.0d;
+    public int rank = Integer.MAX_VALUE;
     private Random rng = ThreadLocalRandom.current();
 
-    private short[] genotype;
+    public short[] genotype;
 
     /**
      * Construct an individual with a random genotype sequence
@@ -48,69 +55,63 @@ public class Individual implements Comparable<Individual> {
     }
 
     /**
-     * Evaluate the fitness of this individual by assessing the objective functions on the phenotype.
-     * Updates the fitness field on this individual as well as return the value.
-     *
-     * This will simply return the fitness field if the "dirty" field is set to false.
-     * @return The fitness value of this individual as an integer.
+     * Evaluate the objectives of this individual by assessing the objective functions on the phenotype.
+     * Updates the cost and distance fields in this individual.
      */
-    public double calculateFitness() {
+    public void calculateObjectives() {
         // Shortcut if in a non-dirty state
-        if (!dirty) return fitness;
+        if (!dirty) return;
 
-        int cost_sum = 0;
-        int distance_sum = 0;
-        for (int i = 0; i < this.genotype.length - 1; i++) {
-            cost_sum += Evolution.cost[genotype[i]][genotype[i + 1]];
-            distance_sum += Evolution.distance[genotype[i]][genotype[i + 1]];
-        }
+        _calculateCost();
+        _calculateDistance();
 
-        cost_sum += Evolution.cost[genotype[0]][genotype[genotype.length - 1]];
-        distance_sum += Evolution.distance[genotype[0]][genotype[genotype.length - 1]];
-
-        // Update fitness and clear dirty flag.
-        fitness = ((double) cost_sum / Evolution.avgCost + (double) distance_sum / Evolution.avgDistance);
         dirty = false;
-
-        return fitness;
     }
 
     /**
-     * Compares this individual to another individual, and ranks according to current fitness value.
-     * @param other An Individual object
-     * @return 1 if this individual is better than the other, -1 if opposite, or 0 if even.
+     * Empties the hashset containing solutions dominated by this individual
      */
-    @Override
-    public int compareTo(Individual other) {
-        if (this.getFitness() < other.getFitness()) return -1;
-        else if (this.getFitness() > other.getFitness()) return 1;
-        return 0;
+    public void clearDominationSet() {
+        dominates.clear();
     }
 
     /**
-     * Perform crossover on this individual, producing a new individual whose genome is a crossover between
-     * the two parts, if the dice roll is below the threshold value. Otherwise it will return itself.
-     * Will return itself if this individual is currently invulnerable.
-     * @param other An Individual object
-     * @return A new Individual object if crossover has been performed, this individual otherwise.
+     * Dominate another individual by adding the to the dominated hash set.
+     * This method is simplex, thus perform no increments on the individual argument.
+     * @param i An individual instance.
      */
-    public Individual crossover(Individual other) {
-        if (!invulnerable && Math.random() < Main.CROSSOVER_RATE) {
-            // TODO: Figure out how to perform crossover and do the necessary operations
-            return new Individual(this.genotype);
-        } else {
-            return new Individual(this.genotype);
-        }
+    public void dominate(Individual i) {
+        dominates.add(i);
     }
 
     /**
-     * Retrieve the fitness value for this individual. If the dirty flag is true, the fitness will first have to
-     * be re-calculated before being returned.
-     * @return The fitness value of this individual
+     * Retrieve the number of times this individual has been dominated by another individual.
+     * @return An integer.
      */
-    public double getFitness() {
-        if (dirty) calculateFitness();
-        return fitness;
+    public int getDominatedCount() {
+        return this.dominated.get();
+    }
+
+    /**
+     * Retrieve the set of solutions dominated by this individual.
+     * @return A HashSet of dominated individuals.
+     */
+    public HashSet<Individual> getDominatesSet() {
+        return dominates;
+    }
+
+    /**
+     * Increments the dominated counter on this individual
+     */
+    public int incrementDominated() {
+        return this.dominated.incrementAndGet();
+    }
+
+    /**
+     * Decrements the dominated counter on this individual
+     */
+    public int decrementDominated() {
+        return this.dominated.decrementAndGet();
     }
 
     /**
@@ -119,6 +120,20 @@ public class Individual implements Comparable<Individual> {
      */
     public boolean isDirty() {
         return dirty;
+    }
+
+    /**
+     * Checks to see if this individual is dominated by the individual argument i.
+     * Domination holds true iff:
+     *
+     * Individual i is no worse than this Individual in any of its objectives
+     * Individual i is strictly better than this Individual in at least one of the objectives
+     *
+     * @param i An Individual instance
+     * @return true if this individual is dominated by i
+     */
+    public boolean isDominatedBy(Individual i) {
+        return cost >= i.cost && distance >= i.distance && (i.cost < cost || i.distance < distance);
     }
 
     /**
@@ -148,12 +163,10 @@ public class Individual implements Comparable<Individual> {
      * @param n The number of random swaps to perform
      */
     void mutate(int n) {
-        // Abort if we are invulnerable
-        if (invulnerable) return;
-
         // If we hit below mutation threshold, swap genes N times
         if (rng.nextDouble() < Main.MUTATION_RATE) {
-            for (int i = 0; i < n; i++) {
+            int mutations = rng.nextInt(n);
+            for (int i = 0; i < mutations; i++) {
                 int from = rng.nextInt(Main.NUM_CITIES - 1);
                 int to = rng.nextInt(Main.NUM_CITIES - 1);
 
@@ -161,9 +174,34 @@ public class Individual implements Comparable<Individual> {
                 genotype[to] = genotype[from];
                 genotype[from] = tmp;
             }
-
-            dirty = true;
         }
+    }
+
+    /**
+     * Check if this individual has identical genome to another individual
+     * @param other An Individual Instance
+     * @return
+     */
+    public boolean hasEqualGenome(Individual other) {
+        for (int i = 0; i < genotype.length; i++) {
+            if (genotype[i] != other.genotype[i]) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Resets the dominated counter
+     */
+    public void resetDominatedCount() {
+        this.dominated.set(0);
+    }
+
+    /**
+     * Sets the rank of this individual.
+     * @param i An integer representing the rank of this individual
+     */
+    public void setRank(int i) {
+        rank = i;
     }
 
     /**
@@ -171,35 +209,29 @@ public class Individual implements Comparable<Individual> {
      * @return A string representing this object containing its ID, and fitness value
      */
     public String toString() {
-        return String.format("Individual[%d] F: %.2f, C: %d, D: %d, Order: %s", _id, fitness, _calculateCost(), _calculateDistance(), Arrays.toString(genotype));
+        return String.format("Individual[%d] C: %d, D: %d, CD: %.1f, Order: %s", _id, cost, distance, crowdingDistance, Arrays.toString(genotype));
     }
 
     /**
-     * Calculates the cost fitness
-     * @return The total cost
+     * Calculates the cost value
      */
-    private int _calculateCost() {
-        int cost_sum = 0;
+    private void _calculateCost() {
+        cost = 0;
         for (int i = 0; i < this.genotype.length - 1; i++) {
-            cost_sum += Evolution.cost[genotype[i]][genotype[i + 1]];
+            cost += Evolution.cost[genotype[i]][genotype[i + 1]];
         }
-        cost_sum += Evolution.cost[genotype[0]][genotype[genotype.length - 1]];
-
-        return cost_sum;
+        cost += Evolution.cost[genotype[0]][genotype[genotype.length - 1]];
     }
 
     /**
-     * Calculates the distance fitness
-     * @return The total distance
+     * Calculates the distance value
      */
-    private int _calculateDistance() {
-        int distance_sum = 0;
+    private void _calculateDistance() {
+        distance = 0;
         for (int i = 0; i < this.genotype.length - 1; i++) {
-            distance_sum += Evolution.distance[genotype[i]][genotype[i + 1]];
+            distance += Evolution.distance[genotype[i]][genotype[i + 1]];
         }
-        distance_sum += Evolution.distance[genotype[0]][genotype[genotype.length - 1]];
-
-        return distance_sum;
+        distance += Evolution.distance[genotype[0]][genotype[genotype.length - 1]];
     }
 
     /**
@@ -210,6 +242,8 @@ public class Individual implements Comparable<Individual> {
         this.genotype = genotype;
         this._id = idGenerator.incrementAndGet();
         this.fitness = 0;
+        this.dominates = new HashSet<>();
+        this.dominated = new AtomicInteger();
     }
 
     /**
